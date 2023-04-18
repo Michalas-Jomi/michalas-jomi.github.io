@@ -137,50 +137,34 @@
         <article>
             <div class='body' id='build' style="display: block;">
 
-                <div id='buildinv'></div>
+                <div id="buildinvContainer">
+                    <div id='buildinv'></div>
+                    <div id="buildItemSlectDiv"></div>
+                </div>
                 <div id='buildeq'></div>
                 <div id='buildaside'>
                     <div id='buildinfo'></div>
                     <div id='buildconf'>
 
-                        <div id="buildInfoDiv"></div>
-
-                        <div id="buildMakeItem">
-                            <div id="buildSelectItemImg" style="opacity: 0; width: 70px; height: 70px;"></div>
-                            <label>Rodzaj
-                                <select id='buildSelectType'>
-                                    <option value="none" selected>-----</option>
-                                    <option value="Amulety">Amulety</option>
-                                    <option value="Bron">Broń</option>
-                                    <option value="Buty">Buty</option>
-                                    <option value="Helmy">Hełmy</option>
-                                    <option value="Paski">Paski</option>
-                                    <option value="Peleryny">Peleryny</option>
-                                    <option value="Pierki">Pierki</option>
-                                    <option value="Rekawice">Rękawice</option>
-                                    <option value="Spodnie">Spodnie</option>
-                                    <option value="Tarcze Karwasze">Tarcze Karwasze</option>
-                                    <option value="Zbroje">Zbroje</option>
-                                  </select>
-                            </label>
-                            <label style="opacity: 0;">Item
-                                <select id='buildSelectItem'>
-                                </select>
-                            </label>
-                            <button id="buildSelectItemConfirm" style="opacity: 0; width: 80%; height: 30px; margin-left: 10%; margin-top: 10px;">Zatwierdz</button>
+                        <div id="buildConfNav">
+                            <button id="buildConfNavMake">Nowy Item</button>
+                            <button id="buildConfNavSave">Zapisz wczytaj</button>
                         </div>
 
-                        <div id="buildEditItem" style="display: none;">
-                            <div>
-                                <img id='buildEditIcon'>
-                                <button id='buildEditClose'>X</button>
-                                <div style="clear: both;"></div>
+                        <div id="buildEditItemDiv" style="display: none;">
+                            <div id="buildInfoDiv"></div>
+
+                            <div id="buildEditItem">
+                                <div>
+                                    <img id='buildEditIcon'>
+                                    <button id='buildEditClose'>X</button>
+                                    <div style="clear: both;"></div>
+                                </div>
+
+                                <div id="buildEditDriffs"></div>
+
                             </div>
-
-                            <div id="buildEditDriffs"></div>
-
                         </div>
-
 
                         <div id="buildSaveLoad">
                             <button id="buildSave">Zapisz build</button>

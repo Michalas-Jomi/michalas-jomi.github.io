@@ -248,7 +248,7 @@ class Driff {
         let x = this.tier + this.lvl - 1
         if (this.lvl >= 19)
             x += this.lvl - 18
-        return this.data.amp * x
+        return this.data.amp * x * (this.slot.item.data.epik ? 1.6 : 1)
     }
 
 }
@@ -290,6 +290,7 @@ class GUI {
     static body = document.getElementById('build')
     static eq = document.getElementById('buildeq')
     static inv = document.getElementById('buildinv')
+    static select = document.getElementById('buildItemSlectDiv')
     static info = document.getElementById('buildinfo')
     static conf = document.getElementById('buildconf')
     static foot = document.getElementById('buildfoot')
@@ -307,6 +308,26 @@ class GUI {
 
         // Conf
         GUIConf.init()
+
+        GUI._makeEpiks()
+    }
+    static _makeEpiks() {
+        let fabric = (name, mod) => {
+            let item = new GUIItem(GUIItemData.getData('Bron', name))
+
+            item.driffs[0].driff = new Driff(DriffData.fromName('band'), item.driffs[0], 1, 3)
+            item.driffs[1].driff = new Driff(DriffData.fromName(mod), item.driffs[1], 1, 3)
+
+            return item
+        }
+
+        GUI.addToInv(fabric('allenor', 'astah'))
+        GUI.addToInv(fabric('attawa', 'oda'))
+        GUI.addToInv(fabric('gorthdar', 'unn'))
+        GUI.addToInv(fabric('imisindo', 'ling'))
+        GUI.addToInv(fabric('latarnia_zycia', 'Err'))
+        GUI.addToInv(fabric('washi', 'ulk'))
+        GUI.addToInv(fabric('zmij', 'teld'))
     }
 
     /**
@@ -371,80 +392,33 @@ class GUIConf {
     /** @type {GUIItem} */
     static editItem = null
     static divs = {
-        info: document.getElementById('buildInfoDiv'),
+        save: {
+            main: document.getElementById('buildSaveLoad'),
 
-        save: document.getElementById('buildSave'),
-        load: document.getElementById('buildLoad'),
-
-        make: {
-            main: document.getElementById('buildMakeItem'),
-
-            type: document.getElementById('buildSelectType'),
-            item: document.getElementById('buildSelectItem'),
-
-            confirm: document.getElementById('buildSelectItemConfirm'),
+            save: document.getElementById('buildSave'),
+            load: document.getElementById('buildLoad'),
         },
+
+        nav: {
+            make: document.getElementById('buildConfNavMake'),
+            save: document.getElementById('buildConfNavSave'),
+        },
+
         edit: {
-            main: document.getElementById('buildEditItem'),
+            main: document.getElementById('buildEditItemDiv'),
+
+            info: document.getElementById('buildInfoDiv'),
 
             close: document.getElementById('buildEditClose'),
 
             driffs: document.getElementById('buildEditDriffs'),
         }
     }
+
     static init() {
         GUIConf.divs.edit.close.onclick = ev => GUIConf.edit(null)
 
-
-        GUIConf.divs.make.type.onchange = ev => {
-            let selected = ev.target.selectedOptions[0].value
-            GUIConf.divs.make.item.innerHTML = ''
-
-            GUIConf.divs.make.confirm.style.setProperty('opacity', '0')
-            if (selected == 'none') {
-                GUIConf.divs.make.item.parentNode.style.setProperty('opacity', '0')
-            } else {
-                GUIConf.divs.make.item.parentNode.style.setProperty('opacity', '1')
-                let make = (value, text) => {
-                    let opt = document.createElement('option')
-
-                    opt.setAttribute('value', value)
-                    opt.innerText = text
-                    GUIConf.divs.make.item.appendChild(opt)
-
-                }
-                make('none', '-----')
-                for (let i in GUIItemData.items[selected])
-                    make(i, GUIItemData.items[selected][i].fullname)
-            }
-
-            GUIConf.setInfo()
-        }
-        GUIConf.divs.make.item.onchange = ev => {
-            let itemId = ev.target.selectedOptions[0].value
-            let type = GUIConf.divs.make.type.selectedOptions[0].value
-
-            if (itemId == 'none')
-                GUIConf.divs.make.confirm.style.setProperty('opacity', '0')
-            else
-                GUIConf.divs.make.confirm.style.setProperty('opacity', '1')
-
-
-            GUIConf.setInfo()
-        }
-        GUIConf.divs.make.confirm.onclick = ev => {
-            let type = GUIConf.divs.make.type.selectedOptions[0].value
-            let itemId = GUIConf.divs.make.item.selectedOptions[0].value
-
-            let itemData = GUIItemData.items[type][itemId]
-
-            let item = new GUIItem(itemData)
-            GUI.addToInv(item)
-
-            GUIConf.edit(item)
-        }
-
-        GUIConf.divs.save.onclick = ev => {
+        GUIConf.divs.save.save.onclick = ev => {
             console.log('zapisywanie buildu')
 
             let data = Build.save()
@@ -456,7 +430,7 @@ class GUIConf {
             })
 
         }
-        GUIConf.divs.load.onclick = ev => {
+        GUIConf.divs.save.load.onclick = ev => {
             console.log('wczytywanie buildu')
             navigator.clipboard.readText().then(data => {
                 if (Build.load(data))
@@ -470,6 +444,83 @@ class GUIConf {
 
         }
 
+        GUIConf.divs.nav.make.onclick = ev => {
+            if (GUI.select.style.getPropertyValue('display') == 'block')
+                GUIConf.closeSelect()
+            else
+                GUIConf.openSelect()
+        }
+        GUIConf.divs.nav.save.onclick = ev => {
+            if (GUIConf.editItem != null)
+                GUIConf.edit(null)
+
+            this.divs.save.main.style.setProperty('display', 'block')
+        }
+
+        GUIConf._makeSelect()
+    }
+    static _makeSelect() {
+        GUI.select.style.setProperty('display', 'none')
+
+        let head = document.createElement('div')
+        let bodies = document.createElement('div')
+        GUI.select.appendChild(head)
+        GUI.select.appendChild(bodies)
+
+
+        for (let type in GUIItemData.items) {
+            let body = document.createElement('div')
+
+            body.style.setProperty('display', 'none')
+
+            let icon = document.createElement('div')
+            icon.setAttribute('class', 'buildSelectCatIcon')
+            icon.style.setProperty('background-image', `url('icons/eq${type}.png')`)
+
+            head.appendChild(icon)
+            bodies.appendChild(body)
+
+            icon.onclick = ev => {
+                for (let b of bodies.children)
+                    b.style.setProperty('display', 'none')
+                body.style.setProperty('display', 'block')
+            }
+
+            for (let itemData of GUIItemData.items[type]) {
+                if (itemData.epik)
+                    continue
+                let item = new GUIItem(itemData)
+                let slot = new GUISlot(null)
+                slot.container.onclick = null
+
+                slot.insertItem(item)
+
+                body.appendChild(slot.get())
+
+                item.container.onclick = ev => {
+                    let item = new GUIItem(itemData)
+                    GUIConf.closeSelect()
+                    GUI.addToInv(item)
+                    GUIConf.edit(item)
+                }
+            }
+
+        }
+
+        bodies.children[1].style.setProperty('display', 'block')
+    }
+
+    static openSelect() {
+        if (GUIConf.editItem != null)
+            GUIConf.edit(null)
+        GUI.inv.style.setProperty('display', 'none')
+        GUI.select.style.setProperty('display', 'block')
+        GUIConf.divs.nav.make.style.setProperty('background-color', 'green')
+    }
+    static closeSelect() {
+        GUI.inv.style.setProperty('display', 'block')
+        GUI.select.style.setProperty('display', 'none')
+        GUIConf.divs.nav.make.style.setProperty('background-color', null)
     }
 
     /**
@@ -481,18 +532,17 @@ class GUIConf {
             GUIConf.editItem.slot.setActive(false)
 
         GUIConf.editItem = item
-        if (item == null) {
-            GUIConf.divs.make.main.style.setProperty('display', 'block')
-            GUIConf.divs.edit.main.style.setProperty('display', 'none')
-        } else {
-            item.slot.setActive(true)
-            GUIConf.divs.make.main.style.setProperty('display', 'none')
+        if (item != null) {
             GUIConf.divs.edit.main.style.setProperty('display', 'block')
+            this.divs.save.main.style.setProperty('display', 'none')
+
+            item.slot.setActive(true)
 
             GUIConf.divs.edit.driffs.innerHTML = ''
             for (let driff of item.driffs)
                 GUIConf.divs.edit.driffs.appendChild(driff.getForm())
-        }
+        } else
+            GUIConf.divs.edit.main.style.setProperty('display', 'none')
 
         GUIConf.setInfo()
     }
@@ -503,32 +553,16 @@ class GUIConf {
     static setInfo() {
         let html = ''
 
-        let color = (color, text) => `<span style='color: ${color}'>${text}</span>`
+        if (GUIConf.editItem != null) {
+            let color = (color, text) => `<span style='color: ${color}'>${text}</span>`
 
-        if (GUIConf.editItem == null) {
-            let type = GUIConf.divs.make.type.selectedOptions[0].value
-            let itemId
-            if (type != 'none')
-                itemId = GUIConf.divs.make.item.selectedOptions[0].value
-
-            if (type != 'none' && itemId != 'none') {
-                let data = GUIItemData.items[type][itemId]
-                html = `
-                    <h2>
-                        <img src='${data.getImgSrc()}'>
-                        ${data.fullname} [${data.rank}]
-                    </h2>
-                    <h3>Pojemność: ${GUIItem.caps[data.rank][0]}</h3>
-                        `
-            }
-        } else {
             let data = GUIConf.editItem.data
             html = `
                 <h2>
                     <img src='${data.getImgSrc()}'>
                     ${data.fullname} [${data.rank}]
                 </h2>
-                <h3>Pojemność: ${GUIItem.caps[data.rank][0]}</h3>
+                <h3>Pojemność: ${GUIConf.editItem.calcPower()}/${GUIItem.caps[data.rank][0]}</h3>
                 `
             for (let i = 0; i < GUIConf.editItem.driffs.length; i++) {
                 let driff = GUIConf.editItem.driffs[i]
@@ -546,7 +580,7 @@ class GUIConf {
             }
         }
 
-        GUIConf.divs.info.innerHTML = html
+        GUIConf.divs.edit.info.innerHTML = html
     }
 }
 
@@ -705,8 +739,10 @@ class GUIDriffSlot {
             }
             if (this.driff != null) {
                 let lastVal = this.driff.tier
+                this.driff.setTier(val)
                 if (lastVal < val && this.item.overPower()) {
                     this.inpTier.value = lastVal
+                    this.driff.setTier(lastVal)
                     return
                 }
             }
@@ -717,9 +753,6 @@ class GUIDriffSlot {
                 this.inpLvl.value = mx
                 this.inpLvl.onchange(null)
             }
-
-            if (this.driff != null)
-                this.driff.setTier(val)
 
             GUIConf.setInfo()
         }
@@ -765,6 +798,11 @@ class GUIDriffSlot {
             GUIConf.setInfo()
         }
 
+        if (this.item.data.epik) {
+            this.inpTier.disabled = true
+            this.inpMod.disabled = true
+        }
+
         return this.form
     }
     static __formid = 0
@@ -806,6 +844,8 @@ class GUIDriffSlot {
         lst.setAttribute('id', id)
 
         for (let driff of Object.values(DriffData.driffs)) {
+            if (driff.name == 'Err')
+                continue
             let opt = document.createElement('option')
             opt.setAttribute('value', driff.fullname)
 
@@ -930,6 +970,11 @@ class GUIItem {
 
         img.style.setProperty('background-image', `url('${src}')`)
 
+        let span = document.createElement('span')
+        span.setAttribute('class', 'buildItemImgName')
+        span.innerText = this.data.fullname
+
+        img.appendChild(span)
         this.head.appendChild(img)
     }
 }
@@ -943,11 +988,12 @@ class GUIItemData {
      * @param {number} rank 
      * @param {String} type 
      */
-    constructor(name, fullname, rank, type) {
+    constructor(name, fullname, rank, type, epik = false) {
         this.fullname = fullname
         this.name = name
         this.rank = rank
         this.type = type
+        this.epik = epik
 
         if (!(type in GUIItemData.items))
             GUIItemData.items[type] = []
@@ -985,6 +1031,7 @@ if (true) {
     new DriffData('teld', 'Szansa na podwójny atak', .5, 4, 60)
     new DriffData('alorn', 'Redukcja obrażeń', .5, 4, NaN)
     new DriffData('farid', 'Szansa na unik', .5, 4, 60)
+    new DriffData('Err', 'Wyssanie many', .5, 1, NaN)
 
     new DriffData('unn', 'Dodatkowe obrażenia od ognia', .5, 3, 60)
     new DriffData('kalh', 'Dodatkowe obrażenia od zimna', .5, 3, 60)
@@ -1013,6 +1060,7 @@ if (true) {
     new DriffData('grud', 'Obrona przeciw urokom', 1, 1, null)
     new DriffData('adrim', 'Odporność na Zamrożenie', 1, 1, 80)
     new DriffData('heb', 'Odporność na Unieruchomienie', .5, 1, NaN)
+
 
 
     new GUIItemData('maiarot', 'Maiarot', 2, 'Amulety');
@@ -1175,6 +1223,14 @@ if (true) {
     new GUIItemData('wyrok_hellara', 'Wyrok Hellara', 12, 'Paski');
     new GUIItemData('vengur', 'Vengur', 12, 'Peleryny');
     new GUIItemData('voglery', 'Voglery ', 12, 'Rekawice');
+
+    new GUIItemData('allenor', 'Allenor', 9, 'Bron', true);
+    new GUIItemData('attawa', 'Attawa', 9, 'Bron', true);
+    new GUIItemData('gorthdar', 'Gorthdar', 9, 'Bron', true);
+    new GUIItemData('imisindo', 'Imisindo', 9, 'Bron', true);
+    new GUIItemData('latarnia_zycia', 'Latarnia Życia', 9, 'Bron', true);
+    new GUIItemData('washi', 'Washi', 9, 'Bron', true);
+    new GUIItemData('zmij', 'Żmij', 9, 'Bron', true);
 }
 
 GUI.init()

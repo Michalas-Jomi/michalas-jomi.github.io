@@ -3,9 +3,23 @@
     padding-top: 50px;
 }
 
-#buildinv {
+#build button {
+    cursor: pointer;
+}
+
+#buildinvContainer {
     width: 400px;
     float: left;
+    min-height: 800px;
+}
+
+#build .buildSelectCatIcon {
+    width: calc(100% / 11 - 2px);
+    height: 34.36px;
+    background-size: 34.36px;
+    border: 1px black solid;
+    cursor: pointer;
+    display: inline-block;
 }
 
 #buildeq {
@@ -23,6 +37,7 @@
 
 #buildinfo {
     width: calc(100% - 90px);
+    min-width: 400px;
     height: 230px;
     background: #00000018;
     padding: 10px;
@@ -34,6 +49,7 @@
 #buildconf {
     margin-top: 20px;
     width: calc(100% - 80px);
+    min-width: 400px;
     height: 400px;
     background: #00000018;
     padding: 40px;
@@ -43,6 +59,11 @@
 
 #buildfoot {
     clear: both;
+}
+
+#buildConfNav>* {
+    width: calc(30% - 16px);
+    margin: 0 10%;
 }
 
 #build .GUISlot {
@@ -63,6 +84,7 @@
 #build .GUIItemImg {
     width: 70px;
     height: 70px;
+    font-size: 15px;
     background-size: 70px;
     background-repeat: no-repeat;
 }
