@@ -1,0 +1,217 @@
+<html>
+
+<head>
+
+    <style>
+        html {
+            font-size: 30;
+        }
+        
+        body {
+            background-color: rgb(63, 63, 63);
+            color: rgb(192, 192, 150);
+        }
+        
+        .body {
+            margin: 0 auto;
+        }
+        
+        #eski {
+            width: 900px;
+        }
+        
+        #eski label {
+            display: block;
+        }
+        
+        #eski table {
+            font-size: 30;
+            border: 3px solid black;
+            margin-top: 20px;
+        }
+        
+        #eski table td,
+        #eski table th {
+            border: 1px solid black;
+        }
+        
+        #eski center>* {
+            float: left;
+        }
+        
+        #menu {
+            position: fixed;
+        }
+        
+        #menu>span {
+            display: block;
+            padding: 5px;
+            margin-bottom: 5px;
+            border-radius: 10px;
+            color: magenta;
+        }
+        
+        #menu>span:hover {
+            display: block;
+            background-color: rgb(51, 51, 51);
+            cursor: pointer;
+        }
+    </style>
+
+    <title>Jomi helper</title>
+    <meta author="https://github.com/Michalas-Jomi">
+
+    <link rel="stylesheet" href="skille.css">
+    <link rel="stylesheet" href="build.css">
+
+</head>
+
+<body>
+
+
+    <main>
+
+
+        <nav>
+            <div id="menu">
+                <span value="eski">Eski</span>
+                <span value="skille">Skille</span>
+                <span value="build">Build</span>
+            </div>
+
+            <script>
+                let menu = document.getElementById('menu');
+                Array.from(menu.children).forEach(span => {
+                    let id = span.getAttribute('value');
+                    span.onclick = () => {
+                        Array.from(document.getElementsByClassName('body')).forEach(body => {
+                            body.style.setProperty('display', 'none')
+                        })
+                        document.getElementById(id).style.setProperty('display', 'block');
+                    }
+                })
+            </script>
+        </nav>
+
+        <article>
+            <div class='body' id='eski' style="display: none;">
+                <div>
+                    <label>Cena eski/itemu: <input type='number' value='25' min='0'>(szt [k])</label>
+                    <!-- TODO obsługa przez js -->
+                    <label>Cena platy: <input type='number' value='8' min='0'>(szt [k])</label>
+                    <!-- wartości domyślne z cookies -->
+                    <label>Ranga itemku: <input type='number' value='0' min='0' max='12'>(0-12)</label>
+                </div>
+
+                <div></div>
+
+                <div>
+                    <p>jeżeli ranga itemu jest inna niż 0, pokazana zostanie jedynie wartość cena eski z i bez inhibitora</p>
+                </div>
+
+                <script src="eski.js"></script>
+
+            </div>
+        </article>
+
+        <article>
+            <div class='body' id='skille' style="display: none;">
+                <div id="profs"></div>
+                <div>
+                    <label>Lvl: <input id="inpskillpoints" type="number" max="140" min="3" value="60" step="1"></label>
+                </div>
+                <div id="skillpoints"></div>
+                <div>
+                    <div id="skilltreescroll">
+                        <button id="skilltreescrollb1">Klasowe</button>
+                        <button id="skilltreescrollb2">Ogólne</button>
+                    </div>
+                    <div id="skillstree"></div>
+                </div>
+            </div>
+
+            <script src="skille.js"></script>
+
+        </article>
+
+        <article>
+            <div class='body' id='build' style="display: block;">
+
+                <div id='buildinv'></div>
+                <div id='buildeq'></div>
+                <div id='buildaside'>
+                    <div id='buildinfo'></div>
+                    <div id='buildconf'>
+
+                        <div id="buildInfoDiv"></div>
+
+                        <div id="buildMakeItem">
+                            <div id="buildSelectItemImg" style="opacity: 0; width: 70px; height: 70px;"></div>
+                            <label>Rodzaj
+                                <select id='buildSelectType'>
+                                    <option value="none" selected>-----</option>
+                                    <option value="Amulety">Amulety</option>
+                                    <option value="Bron">Broń</option>
+                                    <option value="Buty">Buty</option>
+                                    <option value="Helmy">Hełmy</option>
+                                    <option value="Paski">Paski</option>
+                                    <option value="Peleryny">Peleryny</option>
+                                    <option value="Pierki">Pierki</option>
+                                    <option value="Rekawice">Rękawice</option>
+                                    <option value="Spodnie">Spodnie</option>
+                                    <option value="Tarcze Karwasze">Tarcze Karwasze</option>
+                                    <option value="Zbroje">Zbroje</option>
+                                  </select>
+                            </label>
+                            <label style="opacity: 0;">Item
+                                <select id='buildSelectItem'>
+                                </select>
+                            </label>
+                            <button id="buildSelectItemConfirm" style="opacity: 0; width: 80%; height: 30px; margin-left: 10%; margin-top: 10px;">Zatwierdz</button>
+                        </div>
+
+                        <div id="buildEditItem" style="display: none;">
+                            <div>
+                                <img id='buildEditIcon'>
+                                <button id='buildEditClose'>X</button>
+                                <div style="clear: both;"></div>
+                            </div>
+
+                            <div id="buildEditDriffs"></div>
+
+                        </div>
+
+
+                        <div id="buildSaveLoad">
+                            <button id="buildSave">Zapisz build</button>
+                            <button id="buildLoad">Wczytaj build</button>
+                            <div style="clear: both;"></div>
+                        </div>
+
+                    </div>
+                </div>
+                <div id='buildfoot'></div>
+
+            </div>
+            <script src="build.js"></script>
+
+        </article>
+
+        <article>
+            <!-- TODO -->
+            <div class='body' id='timery'>
+
+            </div>
+        </article>
+
+    </main>
+</body>
+
+</html>
+
+
+<!--
+    + generowanie ceny esek
+    + rozdawanie skill na lvl
+    TODO timery na dq
+-->

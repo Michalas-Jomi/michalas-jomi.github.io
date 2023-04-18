@@ -1,0 +1,96 @@
+#skille {
+    width: 1100px;
+    text-align: center;
+}
+
+#skille #skilltreescroll {
+    width: 200px;
+    float: left;
+    height: 657px;
+}
+
+#skille #skilltreescroll button {
+    display: block;
+    width: 200px;
+    height: 50%;
+    font-size: 30px;
+    color: rgb(28, 167, 192);
+    background-color: rgb(63, 63, 63);
+    border: none;
+    border-radius: 90px;
+}
+
+#skille #skilltreescroll button:hover {
+    background-color: rgb(51, 51, 51);
+}
+
+#skille #skilltree {
+    width: 900px;
+    float: left;
+}
+
+#skille .skill {
+    float: left;
+    width: 300px;
+}
+
+#skille .skill>div {
+    height: 23px;
+}
+
+#skille .imgSpell {
+    width: 50%;
+    margin: 0 auto;
+}
+
+#skille .type_u {
+    color: yellow;
+}
+
+#skille .type_a {
+    color: goldenrod
+}
+
+#skille .type_m {
+    color: red;
+}
+
+#skille .lvl {
+    padding: 0 3px;
+    border-radius: 10px;
+    font-size: 20px;
+    display: inline-block;
+    width: calc(900px / 7 / 3 - 21px);
+}
+
+#skille .lvl:hover {
+    background-color: rgb(53, 53, 53);
+    cursor: pointer;
+}
+
+#skille input[type='radio'] {
+    position: fixed;
+    opacity: 0;
+    pointer-events: none;
+}
+
+#skille input[type='radio']:checked {
+    background-color: black;
+}
+
+#skille #profs>button {
+    width: calc(900px / 7);
+    height: 80px;
+    background-color: rgb(63, 63, 63);
+    border: none;
+    cursor: pointer;
+}
+
+#skille #profs>button img {
+    opacity: .7;
+    width: 80px;
+}
+
+#skille #profs>button:hover img {
+    opacity: 1;
+}

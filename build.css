@@ -1,0 +1,143 @@
+#build {
+    padding-left: 200px;
+    padding-top: 50px;
+}
+
+#buildinv {
+    width: 400px;
+    float: left;
+}
+
+#buildeq {
+    margin-top: 50px;
+    margin-left: 100px;
+    width: 200px;
+    float: left;
+}
+
+#buildaside {
+    float: left;
+    margin-left: 100px;
+    width: calc(100% - 900px);
+}
+
+#buildinfo {
+    width: calc(100% - 90px);
+    height: 230px;
+    background: #00000018;
+    padding: 10px;
+    border-radius: 90px;
+    padding: 35px;
+    font-size: 18px;
+}
+
+#buildconf {
+    margin-top: 20px;
+    width: calc(100% - 80px);
+    height: 400px;
+    background: #00000018;
+    padding: 40px;
+    border-radius: 90px;
+    position: relative;
+}
+
+#buildfoot {
+    clear: both;
+}
+
+#build .GUISlot {
+    width: 66px;
+    height: 86px;
+    margin: 5px;
+    float: left;
+    padding: 0 10px;
+    border-radius: 10px;
+    border: 2px #00000000 solid;
+}
+
+#build .GUISlot:hover {
+    background-color: cadetblue;
+    border: 2px black solid;
+}
+
+#build .GUIItemImg {
+    width: 70px;
+    height: 70px;
+    background-size: 70px;
+    background-repeat: no-repeat;
+}
+
+#buildInfoDiv {
+    font-size: 18px;
+}
+
+#buildInfoDiv h3 {
+    margin: 5px 0;
+}
+
+#buildEditDriffs label {
+    margin-left: 15px;
+}
+
+#buildEditInfo:nth-child(2) {
+    float: left;
+}
+
+#buildEditClose {
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    font-size: 20px;
+    border: 1px black solid;
+    border-radius: 90px;
+    background-color: rgba(200, 0, 0, .8);
+}
+
+#buildEditClose:hover {
+    background-color: rgba(200, 0, 0, 1);
+}
+
+#build .GUIDriffSlot {
+    width: 20px;
+    height: 20px;
+    border-radius: 90px;
+    background-color: rgba(10, 10, 10, .5);
+    margin-left: auto;
+    margin-right: auto;
+    float: left;
+}
+
+#buildSaveLoad {
+    width: 100%;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+}
+
+#buildSave,
+#buildLoad {
+    border: 0;
+    padding: 0;
+    font-size: 20px;
+    margin-bottom: 20px;
+    width: calc(45% - 50px);
+    padding: 5px 0;
+    background-color: rgb(70, 200, 70);
+    opacity: .75;
+    border-radius: 90px;
+}
+
+#buildSave:hover,
+#buildLoad:hover {
+    opacity: .9;
+}
+
+#buildSave {
+    margin-left: 50px;
+    float: left;
+}
+
+#buildLoad {
+    margin-right: 50px;
+    float: right;
+}
