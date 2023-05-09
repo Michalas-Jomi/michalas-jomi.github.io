@@ -37,6 +37,7 @@ class Build {
      * @returns {String}
      */
     static save() {
+        /*
         let saveDriff = driff => {
             if (driff == null)
                 return 0
@@ -74,20 +75,69 @@ class Build {
             map.b = saveItem(slot.item)
 
             return map
+        }*/
+
+        let saveDriff = driff => {
+            if (driff == null)
+                return '-'
+
+            return Build.NumToLet(driff.data.id, 2) +
+                Build.NumToLet(driff.lvl, 1) +
+                Build.NumToLet(driff.tier, 1)
+        }
+        let saveItem = item => {
+            if (item == null)
+                return '-'
+
+            let w = Build.NumToLet(item.data.id, 2)
+
+            for (let driff of item.driffs)
+                w += (driff.driff == null ? '-' : saveDriff(driff.driff))
+
+            return w
+        }
+        let saveSlot = slot => {
+            if (slot.type == null && slot.item == null)
+                return '-'
+
+            let w = Build.NumToLet(Type.getId(slot.type), 1) +
+                saveItem(slot.item)
+
+            return w
         }
 
 
-        let map = {
-            inv: [],
-            eq: [],
-        }
+        let w = ''
 
         for (let slot of GUI.eqSlots)
-            map.eq.push(saveSlot(slot))
+            w += saveSlot(slot)
         for (let slot of GUI.invSlots)
-            map.inv.push(saveSlot(slot))
+            w += saveSlot(slot)
 
-        return btoa(JSON.stringify(map))
+        // compressing
+
+        let w2 = ''
+        let last = ''
+        let count = 0
+        let add = () => {
+            if (count > 1)
+                w2 += count.toString() + last
+            else
+                w2 += last
+        }
+        for (let i of w) {
+            if (i == last) {
+                count++
+            } else {
+                add()
+                last = i
+                count = 1
+            }
+        }
+        add()
+
+
+        return w2
     }
 
     /**
@@ -95,7 +145,88 @@ class Build {
      * @param {String} data 
      * @returns {Boolean} powodzenie
      */
-    static load(data) {
+    static load(str) {
+        try {
+            if (str[0] == 'e') {
+                Build.loadOld(str)
+                return true
+            }
+        } catch {}
+
+        // decompressing
+
+        str = str.replaceAll(/(\d+)(.)/g, (_, count, char) => char.repeat(parseInt(count)))
+
+
+        // prepare loading
+
+        let x = 0
+
+        let is0 = () => str[x] == '-' ? ++x > 0 : false
+        let get1 = () => Build.LetToNum(str[x++])
+        let get2 = () => Build.LetToNum(str[x++] + str[x++])
+
+        let loadDriff = (driffSlot) => {
+            if (is0())
+                return null
+
+            let data = DriffData.fromId(get2())
+            let lvl = get1()
+            let tier = get1()
+
+            return new Driff(data, driffSlot, lvl, tier)
+        }
+        let loadItem = () => {
+            if (is0())
+                return null
+
+            let data = GUIItemData.fromId(get2())
+
+            let item = new GUIItem(data)
+
+            let slots = GUIItem.caps[data.rank][1]
+            for (let i = 0; i < slots; i++)
+                item.driffs[i].driff = loadDriff(item.driffs[i])
+
+            return item
+        }
+        let loadSlot = () => {
+            if (is0())
+                return new GUISlot(null)
+
+            let type = Type.getName(get1())
+            let item = loadItem()
+
+            let slot = new GUISlot(type)
+            slot.insertItem(item)
+
+            return slot
+        }
+
+        // reset
+
+        Build.clearGUI()
+
+
+        // loading
+
+        for (let i = 0; i < 12; i++)
+            GUI.addEqSlot(loadSlot())
+        while (x < str.length)
+            GUI.addInvSlot(loadSlot())
+
+
+        Build.calculate()
+
+        return true
+    }
+
+    /**
+     * Wczytuje cały workspace z linijki tekstu w starej wersji
+     * @param {String} data 
+     * @returns {Boolean} powodzenie
+     */
+    static loadOld(data) {
         let loadDriff = (map, driffSlot) => {
             if (map == 0)
                 return null
@@ -140,19 +271,8 @@ class Build {
 
 
         // reset
-        for (let slot of GUI.invSlots)
-            slot.insertItem(null)
-        for (let slot of GUI.eqSlots)
-            slot.insertItem(null)
-        GUIConf.edit(null)
 
-        Build.calculate()
-
-        GUI.invSlots.splice(0, GUI.invSlots.length)
-        GUI.eqSlots.splice(0, GUI.eqSlots.length)
-
-        GUI.inv.innerHTML = ''
-        GUI.eq.innerHTML = ''
+        Build.clearGUI()
 
 
         // loading
@@ -167,12 +287,156 @@ class Build {
 
         return true
     }
+
+    static clearGUI() {
+        for (let slot of GUI.invSlots)
+            slot.insertItem(null)
+        for (let slot of GUI.eqSlots)
+            slot.insertItem(null)
+        GUIConf.edit(null)
+
+        Build.calculate()
+
+        GUI.invSlots.splice(0, GUI.invSlots.length)
+        GUI.eqSlots.splice(0, GUI.eqSlots.length)
+
+        GUI.inv.innerHTML = ''
+        GUI.eq.innerHTML = ''
+    }
+
+
+    /**
+     * zamienia liczbe w systniemie 10 na system 26 uzywający samych małych liter
+     * @param {Number} num 
+     * @param {Number} len 
+     * @returns {String}
+     */
+    static NumToLet(num, len) {
+        let w = ''
+
+        while (num > 0) {
+            w = String.fromCharCode(num % 26 + 97) + w
+            num = parseInt(num / 26)
+        }
+
+        while (w.length < len)
+            w = 'a' + w
+
+        return w
+    }
+
+    /**
+     * zamienia liczbe w systemie 26 z samymi małymi literami alfabetu na zwykła liczbę systemu 10
+     * @param {String} letter
+     * @returns {Number} 
+     */
+    static LetToNum(letter) {
+        let w = 0
+
+        for (let i = 0; i < letter.length; i++) {
+            let x = letter.charCodeAt(i) - 97
+            w += Math.pow(26, letter.length - i - 1) * x
+        }
+
+        return w
+    }
 }
 
+class Info {
+    static copyDiv = document.getElementById('buildCopyContainer')
+    static msgDiv = document.getElementById('buildDialog')
+
+    /**
+     * Wyświetla przez time sekund wiadomość w rogu ekranu
+     * @param {String} msg wiadomość
+     * @param {Number} time sekundy wyświetlania 
+     */
+    static showMessage(msg, time = 3) {
+        let makeDiv = () => {
+            let div = document.createElement('div')
+            div.setAttribute('class', 'buildDialogMessage')
+            div.innerText = msg
+            return div
+        }
+        let animDiv = div => {
+            let bot = div.style.getPropertyValue('bottom')
+            bot = parseInt(bot)
+            if (bot >= 0) {
+                setTimeout(() => Info.msgDiv.removeChild(div), time * 1000)
+                return
+            }
+
+            for (let child of Info.msgDiv.children) {
+                let x = child.style.getPropertyValue('bottom')
+                x = parseInt(x) + 1
+                child.style.setProperty('bottom', x.toString() + 'px')
+            }
+
+            setTimeout(() => animDiv(div), 2)
+        }
+
+        let div = makeDiv()
+        Info.msgDiv.appendChild(div)
+
+        div.style.setProperty('bottom', `-${div.offsetHeight + 20}px`)
+        div.style.setProperty('opacity', '.8')
+
+        animDiv(div)
+    }
+
+    /**
+     * Otwiera okno z wiadomością do skopiowania
+     * @param {String} msg 
+     */
+    static copy(msg) {
+        let close = Info.copyDiv.children[0]
+        let input = Info.copyDiv.children[1]
+        let copy = Info.copyDiv.children[2]
+
+
+        Info.copyDiv.style.setProperty('display', 'block')
+        GUI.body.style.setProperty('display', 'none')
+        input.value = msg // textarea
+
+        close.onclick = () => {
+            Info.copyDiv.style.setProperty('display', 'none')
+            GUI.body.style.setProperty('display', 'block')
+        }
+
+        copy.onclick = () => {
+            input.select();
+            input.setSelectionRange(0, 99999); // for mobile devices
+
+            navigator.clipboard.writeText(msg).then(() => {
+                console.log('skopiowano do schowka:')
+                console.log(msg)
+                Info.showMessage('Skopiowano')
+            })
+
+            close.onclick()
+        }
+    }
+}
+
+class Type {
+    static types = ['Amulety', 'Bron', 'Buty', 'Helmy', 'Pierki', 'Paski', 'Rekawice', 'Tarcze Karwasze', 'Zbroje', 'Peleryny', 'Spodnie']
+
+    static getId(name) {
+        let i = Type.types.indexOf(name)
+        return (i == -1) ? 25 : i
+    }
+    static getName(id) {
+        return (id == 25) ? null : Type.types[id]
+    }
+}
+
+
 class DriffData {
+    static __id = 0
     static driffs = {}
 
     constructor(name, fullname, amp, pow, max = NaN) {
+        this.id = DriffData.__id++;
         this.fullname = fullname
         this.name = name
         this.pow = pow
@@ -191,6 +455,18 @@ class DriffData {
         for (let driff of Object.values(DriffData.driffs))
             if (driff.name == name)
                 return driff
+        return null
+    }
+
+    /**
+     * 
+     * @param {Number} id 
+     * @returns {DriffData}
+     */
+    static fromId(id) {
+        for (let data of Object.values(DriffData.driffs))
+            if (data.id == id)
+                return data
         return null
     }
 }
@@ -416,41 +692,33 @@ class GUIConf {
     }
 
     static init() {
-        GUIConf.divs.edit.close.onclick = ev => GUIConf.edit(null)
+        GUIConf.divs.edit.close.onclick = () => GUIConf.edit(null)
 
-        GUIConf.divs.save.save.onclick = ev => {
+        GUIConf.divs.save.save.onclick = () => {
             console.log('zapisywanie buildu')
 
             let data = Build.save()
 
-            navigator.clipboard.writeText(data).then(() => {
-                alert('Zapisany build skopiowano do schowka')
-                console.log('zapisano build:')
-                console.log(data)
-            })
-
+            Info.copy(data)
         }
-        GUIConf.divs.save.load.onclick = ev => {
+        GUIConf.divs.save.load.onclick = () => {
             console.log('wczytywanie buildu')
             navigator.clipboard.readText().then(data => {
                 if (Build.load(data))
-                    console.log('wczytano build')
-                else {
-                    console.log('Nie udało sie wczytać buildu ze schowka')
-                    alert('Nie udało sie wczytać buildu ze schowka')
-                }
-
+                    Info.showMessage('wczytano build')
+                else
+                    Info.showMessage('Nie udało sie wczytać buildu ze schowka')
             })
 
         }
 
-        GUIConf.divs.nav.make.onclick = ev => {
+        GUIConf.divs.nav.make.onclick = () => {
             if (GUI.select.style.getPropertyValue('display') == 'block')
                 GUIConf.closeSelect()
             else
                 GUIConf.openSelect()
         }
-        GUIConf.divs.nav.save.onclick = ev => {
+        GUIConf.divs.nav.save.onclick = () => {
             if (GUIConf.editItem != null)
                 GUIConf.edit(null)
 
@@ -980,6 +1248,8 @@ class GUIItem {
 }
 class GUIItemData {
     static items = {}
+    static __id = 0
+
 
     /**
      * 
@@ -989,11 +1259,13 @@ class GUIItemData {
      * @param {String} type 
      */
     constructor(name, fullname, rank, type, epik = false) {
+        this.id = GUIItemData.__id++;
         this.fullname = fullname
         this.name = name
         this.rank = rank
         this.type = type
         this.epik = epik
+
 
         if (!(type in GUIItemData.items))
             GUIItemData.items[type] = []
@@ -1022,11 +1294,25 @@ class GUIItemData {
                 return data
         return null
     }
+
+    /**
+     * 
+     * @param {Number} id 
+     * @returns {GUIItemData}
+     */
+    static fromId(id) {
+        for (let type in GUIItemData.items)
+            for (let data of GUIItemData.items[type])
+                if (data.id == id)
+                    return data
+        return null
+    }
 }
 
 
+
 /// data
-if (true) {
+function initData() {
     new DriffData('band', 'Szansa na trafienie krytyczne', .5, 4, 60)
     new DriffData('teld', 'Szansa na podwójny atak', .5, 4, 60)
     new DriffData('alorn', 'Redukcja obrażeń', .5, 4, NaN)
@@ -1233,4 +1519,7 @@ if (true) {
     new GUIItemData('zmij', 'Żmij', 9, 'Bron', true);
 }
 
+
+
+initData()
 GUI.init()

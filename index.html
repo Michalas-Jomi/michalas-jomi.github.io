@@ -68,6 +68,12 @@
 
 <body>
 
+    <div id="buildCopyContainer" style="display: none; height: 75%; width: 60%; position: absolute; top: 0px; left: 0px; margin-left: 20%; margin-top: 5%; border: 5px solid black; background-color: rgba(0, 0, 0, 0.8);">
+        <input type="button" class="buildClose" value="X" style="width: 27px; height: 27px; margin-left: calc(100% - 27px); text-align: center;">
+        <textarea readonly style="height: calc(100% - 57px); width: 100%;"></textarea>
+        <input type="button" value="Kopiuj" style="margin: auto 0px auto 35%; width: 30%; height: 30px;">
+    </div>
+    <div id="buildDialog" style="width: 20%; height: 80%; position: fixed; right: 20px; bottom: 0;"></div>
 
     <main>
 
@@ -157,7 +163,7 @@
                             <div id="buildEditItem">
                                 <div>
                                     <img id='buildEditIcon'>
-                                    <button id='buildEditClose'>X</button>
+                                    <button id='buildEditClose' class="buildClose">X</button>
                                     <div style="clear: both;"></div>
                                 </div>
 
@@ -192,10 +198,3 @@
 </body>
 
 </html>
-
-
-<!--
-    + generowanie ceny esek
-    + rozdawanie skill na lvl
-    TODO timery na dq
--->

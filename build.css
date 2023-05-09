@@ -38,7 +38,7 @@
 #buildinfo {
     width: calc(100% - 90px);
     min-width: 400px;
-    height: 230px;
+    min-height: 230px;
     background: #00000018;
     padding: 10px;
     border-radius: 90px;
@@ -105,17 +105,20 @@
     float: left;
 }
 
-#buildEditClose {
-    position: absolute;
-    top: 20px;
-    right: 40px;
+.buildClose {
     font-size: 20px;
     border: 1px black solid;
     border-radius: 90px;
     background-color: rgba(200, 0, 0, .8);
 }
 
-#buildEditClose:hover {
+#buildEditClose {
+    position: absolute;
+    top: 20px;
+    right: 40px;
+}
+
+.buildClose:hover {
     background-color: rgba(200, 0, 0, 1);
 }
 
@@ -162,4 +165,14 @@
 #buildLoad {
     margin-right: 50px;
     float: right;
+}
+
+.buildDialogMessage {
+    width: 100%;
+    opacity: 0;
+    position: absolute;
+    margin-bottom: 20px;
+    padding: 2px 5px;
+    border: 1px black solid;
+    background-color: darkslategrey;
 }
