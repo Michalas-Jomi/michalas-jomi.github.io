@@ -435,13 +435,15 @@ class DriffData {
     static __id = 0
     static driffs = {}
 
-    constructor(name, fullname, amp, pow, max = NaN) {
+    constructor(name, fullname, amp, pow, max, icon) {
+        console.log(max)
         this.id = DriffData.__id++;
         this.fullname = fullname
         this.name = name
         this.pow = pow
         this.amp = amp
         this.max = max
+        this.icon = icon
 
         DriffData.driffs[this.fullname] = this
     }
@@ -956,6 +958,7 @@ class GUISlot {
             this.item.slot = this
             this.body.innerHTML = ''
             this.body.appendChild(item.get())
+            this.item.refreshGUIDriffs()
         }
 
         if (this.isEq())
@@ -992,6 +995,26 @@ class GUIDriffSlot {
         this.inpTier = null
     }
 
+    refreshGUI() {
+        let shape
+        let color
+        if (this.driff == null) {
+            shape = null
+            color = null
+        } else {
+            shape = [
+                'circle(50% at 50% 50%)',
+                'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+                'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
+                'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)'
+            ][this.driff.tier - 1]
+            color = this.driff.data.icon
+        }
+
+        this.container.style.setProperty('clip-path', shape)
+        this.container.style.setProperty('background-color', color)
+    }
+
     getForm() {
         if (this.form != null)
             return this.form
@@ -1022,6 +1045,7 @@ class GUIDriffSlot {
                 this.inpLvl.onchange(null)
             }
 
+            this.refreshGUI()
             GUIConf.setInfo()
         }
         this.inpLvl.onchange = ev => {
@@ -1062,6 +1086,8 @@ class GUIDriffSlot {
 
             if (this.item.slot.isEq())
                 Build.calculate()
+
+            this.refreshGUI()
 
             GUIConf.setInfo()
         }
@@ -1245,6 +1271,14 @@ class GUIItem {
         img.appendChild(span)
         this.head.appendChild(img)
     }
+
+    /**
+     * Odświeża wygląd slotów driffów
+     */
+    refreshGUIDriffs() {
+        for (let driff of this.driffs)
+            driff.refreshGUI()
+    }
 }
 class GUIItemData {
     static items = {}
@@ -1313,39 +1347,39 @@ class GUIItemData {
 
 /// data
 function initData() {
-    new DriffData('band', 'Szansa na trafienie krytyczne', .5, 4, 60)
-    new DriffData('teld', 'Szansa na podwójny atak', .5, 4, 60)
-    new DriffData('alorn', 'Redukcja obrażeń', .5, 4, NaN)
-    new DriffData('farid', 'Szansa na unik', .5, 4, 60)
-    new DriffData('Err', 'Wyssanie many', .5, 1, NaN)
+    new DriffData('band', 'Szansa na trafienie krytyczne', .5, 4, 60, 'red')
+    new DriffData('teld', 'Szansa na podwójny atak', .5, 4, 60, 'red')
+    new DriffData('alorn', 'Redukcja obrażeń', .5, 4, NaN, 'blue')
+    new DriffData('farid', 'Szansa na unik', .5, 4, 60, 'blue')
+    new DriffData('Err', 'Wyssanie many', .5, 1, NaN, 'green') // z kolorem zgaduje
 
-    new DriffData('unn', 'Dodatkowe obrażenia od ognia', .5, 3, 60)
-    new DriffData('kalh', 'Dodatkowe obrażenia od zimna', .5, 3, 60)
-    new DriffData('val', 'Dodatkowe obrażenia od energii', .5, 3, 60)
-    new DriffData('abaf', 'Modyfikator obrażeń magicznych', .5, 3, null)
-    new DriffData('astah', 'Modyfikator obrażeń fizycznych', .5, 3, null)
-    new DriffData('ulk', 'Modyfikator trafień wręcz', 1, 3, null)
-    new DriffData('ling', 'Modyfikator trafień dystansowych', 1, 3, null)
-    new DriffData('oda', 'Modyfikator trafień mentalnych', 1, 3, null)
-    new DriffData('holm', 'Szansa na zredukowanie obrażeń', .5, 3, 60)
-    new DriffData('verd', 'Szansa na odczarowanie', .5, 3, 60)
-    new DriffData('faln', 'Redukcja obrażeń krytycznych', 2, 3, 60)
-    new DriffData('iori', 'Redukcja otrzymanych obrażeń biernych', 1, 3, 80)
+    new DriffData('unn', 'Dodatkowe obrażenia od ognia', .5, 3, 60, 'red')
+    new DriffData('kalh', 'Dodatkowe obrażenia od zimna', .5, 3, 60, 'red')
+    new DriffData('val', 'Dodatkowe obrażenia od energii', .5, 3, 60, 'red')
+    new DriffData('abaf', 'Modyfikator obrażeń magicznych', .5, 3, null, 'red')
+    new DriffData('astah', 'Modyfikator obrażeń fizycznych', .5, 3, null, 'red')
+    new DriffData('ulk', 'Modyfikator trafień wręcz', 1, 3, null, 'yellow')
+    new DriffData('ling', 'Modyfikator trafień dystansowych', 1, 3, null, 'yellow')
+    new DriffData('oda', 'Modyfikator trafień mentalnych', 1, 3, null, 'yellow')
+    new DriffData('holm', 'Szansa na zredukowanie obrażeń', .5, 3, 60, 'blue')
+    new DriffData('verd', 'Szansa na odczarowanie', .5, 3, 60, 'green')
+    new DriffData('faln', 'Redukcja obrażeń krytycznych', 2, 3, 60, 'blue')
+    new DriffData('iori', 'Redukcja otrzymanych obrażeń biernych', 1, 3, 80, 'blue')
 
-    new DriffData('von', 'Zużycie many', 1, 2, 60)
-    new DriffData('amad', 'Zużycie kondycji', 1, 2, 60)
-    new DriffData('ann', 'Regeneracja many', .15, 2, 80)
-    new DriffData('eras', 'Regeneracja kondycjii', .15, 2, 80)
-    new DriffData('dur', 'Podwójne losowanie trafienia', 1, 2, 60)
-    new DriffData('elen', 'Podwójne losowanie obrony', 1, 2, NaN)
-    new DriffData('lorb', 'Przełamanie odporności na urok', 1, 2, 60)
-    new DriffData('grod', 'Odporność na trafienie krytyczne', .5, 2, 60)
+    new DriffData('von', 'Zużycie many', 1, 2, 60, 'green')
+    new DriffData('amad', 'Zużycie kondycji', 1, 2, 60, 'green')
+    new DriffData('ann', 'Regeneracja many', .15, 2, 80, 'green')
+    new DriffData('eras', 'Regeneracja kondycjii', .15, 2, 80, 'green')
+    new DriffData('dur', 'Podwójne losowanie trafienia', 1, 2, 60, 'yellow')
+    new DriffData('elen', 'Podwójne losowanie obrony', 1, 2, NaN, 'purple')
+    new DriffData('lorb', 'Przełamanie odporności na urok', 1, 2, 60, 'yellow')
+    new DriffData('grod', 'Odporność na trafienie krytyczne', .5, 2, 60, 'purple')
 
-    new DriffData('tall', 'Obrona wręcz', 1, 1, null)
-    new DriffData('tovi', 'Obrona dystansowa', 1, 1, null)
-    new DriffData('grud', 'Obrona przeciw urokom', 1, 1, null)
-    new DriffData('adrim', 'Odporność na Zamrożenie', 1, 1, 80)
-    new DriffData('heb', 'Odporność na Unieruchomienie', .5, 1, NaN)
+    new DriffData('tall', 'Obrona wręcz', 1, 1, null, 'purple')
+    new DriffData('tovi', 'Obrona dystansowa', 1, 1, null, 'purple')
+    new DriffData('grud', 'Obrona przeciw urokom', 1, 1, null, 'purple')
+    new DriffData('adrim', 'Odporność na Zamrożenie', 1, 1, 80, 'green')
+    new DriffData('heb', 'Odporność na Unieruchomienie', .5, 1, NaN, 'green')
 
 
 
