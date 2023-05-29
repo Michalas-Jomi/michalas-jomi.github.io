@@ -41,6 +41,8 @@
         
         #menu {
             position: fixed;
+            top: 10px;
+            left: 5px;
         }
         
         #menu>span {
@@ -55,6 +57,25 @@
             display: block;
             background-color: rgb(51, 51, 51);
             cursor: pointer;
+        }
+        
+        #heal * {
+            font-size: 22px;
+        }
+        
+        #heal table {
+            margin-top: 40px;
+        }
+        
+        #heal #healOutputTable tr>* {
+            border: 1px black solid;
+            text-align: center;
+            font-size: 1.2em;
+            padding: 5px 20px;
+        }
+        
+        #heal #healOutputTable {
+            border: 3px black solid;
         }
     </style>
 
@@ -82,6 +103,7 @@
             <div id="menu">
                 <span value="eski">Eski</span>
                 <span value="skille">Skille</span>
+                <span value="heal">Heal</span>
                 <span value="build">Build</span>
             </div>
 
@@ -141,6 +163,88 @@
         </article>
 
         <article>
+            <div class="body" id="heal" style="display: none;">
+
+                <center>
+
+                    <div>
+                        <table>
+                            <label>
+                            <tr>
+                                <td>Moc</td>
+                                <td><input id="healInpMoc" type="number" min="0" value="381"></td>
+                            </tr>
+                        </label>
+
+                            <label>
+                            <tr>
+                                <td>Wiedza</td>
+                                <td><input id="healInpWiedza" type="number" min="0" value="406"></td>
+                            </tr>
+                        </label>
+
+                            <label>
+                        <tr>
+                            <td>Mod dmg</td>
+                            <td><input id="healInpMod" type="number" min="0" value="0"></td>
+                        </tr>
+                    </label>
+
+                            <label>
+                            <tr>
+                                <td>Target %</td>
+                                <td><input id="healInpTrg" type="number" step="8.5" min="77" max="247" value="196"></td>
+                            </tr>
+                        </label>
+
+                            <label>
+                            <tr>
+                                <td>Grupa %</td>
+                                <td><input id="healInpGrp" type="number" step="6.5" min="59" max="189" value="163"></td>
+                            </tr>
+                        </label>
+
+                            <label>
+                            <tr>
+                                <td>Rozkaz</td>
+                                <td><input id="healInpRoz" type="number" min="0" value="14"></td>
+                            </tr>
+                        </label>
+
+                            <label>
+                            <tr>
+                                <td>Poświęcenie</td>
+                                <td><input id="healInpPswc" type="number" min="0" value="10"></td>
+                            </tr>
+                        </label>
+
+                        </table>
+                    </div>
+
+                    <div>
+                        <table id="healOutputTable">
+                            <thead>
+                                <tr>
+                                    <th>Rodzaj</th>
+                                    <th>czysty</th>
+                                    <th>rozkaz</th>
+                                    <th>pośw</th>
+                                    <th>rozkaz + pośw</th>
+                                </tr>
+                            </thead>
+                            <tbody id="healOutput">
+                            </tbody>
+                        </table>
+                    </div>
+
+                </center>
+
+                <script src="heal.js"></script>
+
+            </div>
+        </article>
+
+        <article>
             <div class='body' id='build' style="display: block;">
 
                 <div id="buildinvContainer">
@@ -187,12 +291,6 @@
 
         </article>
 
-        <article>
-            <!-- TODO -->
-            <div class='body' id='timery'>
-
-            </div>
-        </article>
 
     </main>
 </body>

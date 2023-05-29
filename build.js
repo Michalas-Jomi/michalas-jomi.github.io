@@ -1,35 +1,48 @@
 class Build {
     static calculate() {
-        let map = {}
-        let counter = {}
-        let effects = []
+            let map = {}
+            let counter = {}
+            let effects = []
 
-        // zbieranie danych
-        for (let slot of GUI.eqSlots)
-            if (slot.item != null)
-                for (let driffSlot of slot.item.driffs) {
-                    let driff = driffSlot.driff
-                    if (driff == null)
-                        continue
+            // zbieranie danych
+            for (let slot of GUI.eqSlots)
+                if (slot.item != null)
+                    for (let driffSlot of slot.item.driffs) {
+                        let driff = driffSlot.driff
+                        if (driff == null)
+                            continue
 
-                    if (driff.data.fullname in map)
-                        map[driff.data.fullname] += driff.effekt()
-                    else
-                        map[driff.data.fullname] = driff.effekt()
+                        if (driff.data.fullname in map)
+                            map[driff.data.fullname] += driff.effekt()
+                        else
+                            map[driff.data.fullname] = driff.effekt()
 
-                    if (driff.data.fullname in counter)
-                        counter[driff.data.fullname] += 1
-                    else
-                        counter[driff.data.fullname] = 1
-                }
+                        if (driff.data.fullname in counter)
+                            counter[driff.data.fullname] += 1
+                        else
+                            counter[driff.data.fullname] = 1
+                    }
 
-        for (let key in map) {
-            let data = DriffData.driffs[key]
-            effects.push(new Effect(data, map[key], counter[key]))
+            for (let key in map) {
+                let data = DriffData.driffs[key]
+                effects.push(new Effect(data, map[key], counter[key]))
+            }
+
+
+            GUI.show(effects)
         }
+        /**
+         * 
+         * @param {Array<Effect>} effects 
+         */
+    static _calcPower(effects) {
+        let power = 0
 
+        // TODO staty, resy itp
 
-        GUI.show(effects)
+        for (let effect of effects) {
+            power += effect.effect / effect.data.amp * Math.pow(effect.data.pow)
+        }
     }
 
     /**
@@ -186,7 +199,7 @@ class Build {
 
             let slots = GUIItem.caps[data.rank][1]
             for (let i = 0; i < slots; i++)
-                item.driffs[i].driff = loadDriff(item.driffs[i])
+                item.driffs[i].setDriff(loadDriff(item.driffs[i]))
 
             return item
         }
@@ -246,7 +259,7 @@ class Build {
 
             let item = new GUIItem(GUIItemData.getData(dataType, dataName))
             for (let i = 0; i < map.c.length; i++)
-                item.driffs[i].driff = loadDriff(map.c[i], item.driffs[i])
+                item.driffs[i].setDriff(loadDriff(map.c[i], item.driffs[i]))
 
             return item
         }
@@ -435,17 +448,24 @@ class DriffData {
     static __id = 0
     static driffs = {}
 
-    constructor(name, fullname, amp, pow, max, icon) {
-        console.log(max)
+    constructor(name, fullname, amp, pow, max, type) {
         this.id = DriffData.__id++;
         this.fullname = fullname
         this.name = name
         this.pow = pow
         this.amp = amp
         this.max = max
-        this.icon = icon
+        this.type = type
 
         DriffData.driffs[this.fullname] = this
+    }
+
+    geticonMod() {
+        return 'icons/driffs/mody/' + this.name + '.png'
+    }
+    getIconSlot(tier) {
+        tier = 'SBMA' [tier - 1]
+        return 'icons/driffs/sloty/' + this.type + '/slot' + tier + '.png'
     }
 
     /**
@@ -487,6 +507,34 @@ class Driff {
         this.lvl = parseInt(lvl)
 
         this.checkCalc()
+
+        this.container = document.createElement('div')
+        this.container.setAttribute('class', 'buildDriff')
+
+        this.imgSlot = document.createElement('img')
+        this.imgIcon = document.createElement('img')
+
+        this.imgSlot.setAttribute('class', 'buildDriffSlot')
+        this.imgIcon.setAttribute('class', 'buildDriffIcon')
+
+        this.container.appendChild(this.imgSlot)
+        this.container.appendChild(this.imgIcon)
+
+
+        this.refreshGUI()
+    }
+
+    refreshGUI() {
+        this.imgSlot.src = this.data.getIconSlot(this.tier)
+        this.imgIcon.src = this.data.geticonMod()
+    }
+
+    /**
+     * 
+     * @returns {HTMLImageElement}
+     */
+    getGUI() {
+        return this.container
     }
 
     /**
@@ -511,7 +559,7 @@ class Driff {
         this.tier = tier
 
         this.checkCalc()
-
+        this.refreshGUI()
     }
 
     checkCalc() {
@@ -593,8 +641,8 @@ class GUI {
         let fabric = (name, mod) => {
             let item = new GUIItem(GUIItemData.getData('Bron', name))
 
-            item.driffs[0].driff = new Driff(DriffData.fromName('band'), item.driffs[0], 1, 3)
-            item.driffs[1].driff = new Driff(DriffData.fromName(mod), item.driffs[1], 1, 3)
+            item.driffs[0].setDriff(new Driff(DriffData.fromName('band'), item.driffs[0], 1, 3))
+            item.driffs[1].setDriff(new Driff(DriffData.fromName(mod), item.driffs[1], 1, 3))
 
             return item
         }
@@ -993,26 +1041,32 @@ class GUIDriffSlot {
         this.inpMod = null
         this.inpLvl = null
         this.inpTier = null
+
+        this.refreshGUI()
     }
 
     refreshGUI() {
+        this.container.innerHTML = ''
+
         let shape
         let color
         if (this.driff == null) {
             shape = null
             color = null
         } else {
-            shape = [
-                'circle(50% at 50% 50%)',
-                'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-                'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
-                'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)'
-            ][this.driff.tier - 1]
-            color = this.driff.data.icon
+            shape = 'unset'
+            color = 'unset'
+            this.driff.refreshGUI()
+            this.container.appendChild(this.driff.getGUI())
         }
 
         this.container.style.setProperty('clip-path', shape)
         this.container.style.setProperty('background-color', color)
+    }
+
+    setDriff(driff) {
+        this.driff = driff
+        this.refreshGUI()
     }
 
     getForm() {
@@ -1064,7 +1118,7 @@ class GUIDriffSlot {
             let data = DriffData.driffs[this.inpMod.value]
             if (!data) {
                 if (this.driff != null)
-                    this.driff = null
+                    this.setDriff(null)
             } else {
                 let undo = false
                 for (let driffSlot of this.item.driffs) {
@@ -1073,14 +1127,14 @@ class GUIDriffSlot {
                             break
                 }
                 let undoDriff = this.driff
-                this.driff = new Driff(data, this, this.inpLvl.value, this.inpTier.value)
+                this.setDriff(new Driff(data, this, this.inpLvl.value, this.inpTier.value))
 
                 if (!undo)
                     undo = this.item.overPower()
 
                 if (undo) {
                     this.inpMod.value = undoDriff == null ? '' : undoDriff.data.fullname
-                    this.driff = undoDriff
+                    this.setDriff(undoDriff)
                 }
             }
 
@@ -1204,8 +1258,20 @@ class GUIItem {
             this.body.appendChild(driff.get())
         }
 
-        for (let i = Math.max(cap[1] - 2, 0); i < cap[1]; i++)
-            this.driffs[i].container.style.setProperty('margin-left', [23, 8.6, 1.5][cap[1] - 1] + 'px')
+        switch (cap[1]) {
+            case 1:
+                this.driffs[0].container.style.setProperty('left', '30px')
+                break
+            case 2:
+                this.driffs[0].container.style.setProperty('left', '11px')
+                this.driffs[1].container.style.setProperty('left', '49px')
+                break
+            case 3:
+                this.driffs[0].container.style.setProperty('left', '0px')
+                this.driffs[1].container.style.setProperty('left', '30px')
+                this.driffs[2].container.style.setProperty('left', '60px')
+                break
+        }
 
 
         this.container.onclick = ev => GUIConf.edit(this)
@@ -1347,39 +1413,39 @@ class GUIItemData {
 
 /// data
 function initData() {
-    new DriffData('band', 'Szansa na trafienie krytyczne', .5, 4, 60, 'red')
-    new DriffData('teld', 'Szansa na podwójny atak', .5, 4, 60, 'red')
-    new DriffData('alorn', 'Redukcja obrażeń', .5, 4, NaN, 'blue')
-    new DriffData('farid', 'Szansa na unik', .5, 4, 60, 'blue')
-    new DriffData('Err', 'Wyssanie many', .5, 1, NaN, 'green') // z kolorem zgaduje
+    new DriffData('band', 'Szansa na trafienie krytyczne', .5, 4, 60, 'Obrazen')
+    new DriffData('teld', 'Szansa na podwójny atak', .5, 4, 60, 'Obrazen')
+    new DriffData('alorn', 'Redukcja obrażeń', .5, 4, NaN, 'Redukcji')
+    new DriffData('farid', 'Szansa na unik', .5, 4, 60, 'Redukcji')
+    new DriffData('Err', 'Wyssanie many', .5, 1, NaN, 'Specjalny') // z kolorem zgaduje
 
-    new DriffData('unn', 'Dodatkowe obrażenia od ognia', .5, 3, 60, 'red')
-    new DriffData('kalh', 'Dodatkowe obrażenia od zimna', .5, 3, 60, 'red')
-    new DriffData('val', 'Dodatkowe obrażenia od energii', .5, 3, 60, 'red')
-    new DriffData('abaf', 'Modyfikator obrażeń magicznych', .5, 3, null, 'red')
-    new DriffData('astah', 'Modyfikator obrażeń fizycznych', .5, 3, null, 'red')
-    new DriffData('ulk', 'Modyfikator trafień wręcz', 1, 3, null, 'yellow')
-    new DriffData('ling', 'Modyfikator trafień dystansowych', 1, 3, null, 'yellow')
-    new DriffData('oda', 'Modyfikator trafień mentalnych', 1, 3, null, 'yellow')
-    new DriffData('holm', 'Szansa na zredukowanie obrażeń', .5, 3, 60, 'blue')
-    new DriffData('verd', 'Szansa na odczarowanie', .5, 3, 60, 'green')
-    new DriffData('faln', 'Redukcja obrażeń krytycznych', 2, 3, 60, 'blue')
-    new DriffData('iori', 'Redukcja otrzymanych obrażeń biernych', 1, 3, 80, 'blue')
+    new DriffData('unn', 'Dodatkowe obrażenia od ognia', .5, 3, 60, 'Obrazen')
+    new DriffData('kalh', 'Dodatkowe obrażenia od zimna', .5, 3, 60, 'Obrazen')
+    new DriffData('val', 'Dodatkowe obrażenia od energii', .5, 3, 60, 'Obrazen')
+    new DriffData('abaf', 'Modyfikator obrażeń magicznych', .5, 3, null, 'Obrazen')
+    new DriffData('astah', 'Modyfikator obrażeń fizycznych', .5, 3, null, 'Obrazen')
+    new DriffData('ulk', 'Modyfikator trafień wręcz', 1, 3, null, 'Celnosci')
+    new DriffData('ling', 'Modyfikator trafień dystansowych', 1, 3, null, 'Celnosci')
+    new DriffData('oda', 'Modyfikator trafień mentalnych', 1, 3, null, 'Celnosci')
+    new DriffData('holm', 'Szansa na zredukowanie obrażeń', .5, 3, 60, 'Redukcji')
+    new DriffData('verd', 'Szansa na odczarowanie', .5, 3, 60, 'Specjalny')
+    new DriffData('faln', 'Redukcja obrażeń krytycznych', 2, 3, 60, 'Redukcji')
+    new DriffData('iori', 'Redukcja otrzymanych obrażeń biernych', 1, 3, 80, 'Redukcji')
 
-    new DriffData('von', 'Zużycie many', 1, 2, 60, 'green')
-    new DriffData('amad', 'Zużycie kondycji', 1, 2, 60, 'green')
-    new DriffData('ann', 'Regeneracja many', .15, 2, 80, 'green')
-    new DriffData('eras', 'Regeneracja kondycjii', .15, 2, 80, 'green')
-    new DriffData('dur', 'Podwójne losowanie trafienia', 1, 2, 60, 'yellow')
-    new DriffData('elen', 'Podwójne losowanie obrony', 1, 2, NaN, 'purple')
-    new DriffData('lorb', 'Przełamanie odporności na urok', 1, 2, 60, 'yellow')
-    new DriffData('grod', 'Odporność na trafienie krytyczne', .5, 2, 60, 'purple')
+    new DriffData('von', 'Zużycie many', 1, 2, 60, 'Specjalny')
+    new DriffData('amad', 'Zużycie kondycji', 1, 2, 60, 'Specjalny')
+    new DriffData('ann', 'Regeneracja many', .15, 2, 80, 'Specjalny')
+    new DriffData('eras', 'Regeneracja kondycjii', .15, 2, 80, 'Specjalny')
+    new DriffData('dur', 'Podwójne losowanie trafienia', 1, 2, 60, 'Celnosci')
+    new DriffData('elen', 'Podwójne losowanie obrony', 1, 2, NaN, 'Obrony')
+    new DriffData('lorb', 'Przełamanie odporności na urok', 1, 2, 60, 'Celnosci')
+    new DriffData('grod', 'Odporność na trafienie krytyczne', .5, 2, 60, 'Obrony')
 
-    new DriffData('tall', 'Obrona wręcz', 1, 1, null, 'purple')
-    new DriffData('tovi', 'Obrona dystansowa', 1, 1, null, 'purple')
-    new DriffData('grud', 'Obrona przeciw urokom', 1, 1, null, 'purple')
-    new DriffData('adrim', 'Odporność na Zamrożenie', 1, 1, 80, 'green')
-    new DriffData('heb', 'Odporność na Unieruchomienie', .5, 1, NaN, 'green')
+    new DriffData('tall', 'Obrona wręcz', 1, 1, null, 'Obrony')
+    new DriffData('tovi', 'Obrona dystansowa', 1, 1, null, 'Obrony')
+    new DriffData('grud', 'Obrona przeciw urokom', 1, 1, null, 'Obrony')
+    new DriffData('adrim', 'Odporność na Zamrożenie', 1, 1, 80, 'Specjalny')
+    new DriffData('heb', 'Odporność na Unieruchomienie', .5, 1, NaN, 'Specjalny')
 
 
 

@@ -74,6 +74,7 @@
     padding: 0 10px;
     border-radius: 10px;
     border: 2px #00000000 solid;
+    position: relative;
 }
 
 #build .GUISlot:hover {
@@ -123,14 +124,12 @@
 }
 
 #build .GUIDriffSlot {
-    width: 20px;
-    height: 20px;
+    width: 26px;
+    height: 26px;
     clip-path: circle(50% at 50% 50%);
     background-color: rgba(10, 10, 10, .5);
-    margin-left: auto;
-    margin-right: auto;
-    float: left;
-    opacity: .7;
+    bottom: 0;
+    position: absolute;
 }
 
 #buildSaveLoad {
@@ -176,4 +175,22 @@
     padding: 2px 5px;
     border: 1px black solid;
     background-color: darkslategrey;
+}
+
+.buildDriff {
+    position: relative;
+}
+
+.buildDriffSlot {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 26px;
+}
+
+.buildDriffIcon {
+    position: absolute;
+    top: 6.5px;
+    left: 6.5px;
+    width: 13px;
 }
