@@ -120,12 +120,16 @@ class Build {
         }
 
 
-        let w = ''
+        let w = '0'
 
         for (let slot of GUI.eqSlots)
             w += saveSlot(slot)
+        w += Build.NumToLet(GUI.invSlots.length, 2)
         for (let slot of GUI.invSlots)
             w += saveSlot(slot)
+        w += Build.NumToLet(GUI.invDriffSlots.length)
+        for (let driff of GUI.invDriffSlots)
+            w += saveDriff(driff.driff)
 
         // compressing
 
@@ -165,6 +169,12 @@ class Build {
                 return true
             }
         } catch {}
+
+
+        let onlyItems = str[0] != '0'
+
+        if (!onlyItems)
+            str = str.slice(1)
 
         // decompressing
 
@@ -225,9 +235,22 @@ class Build {
 
         for (let i = 0; i < 12; i++)
             GUI.addEqSlot(loadSlot())
-        while (x < str.length)
-            GUI.addInvSlot(loadSlot())
-
+        if (onlyItems) {
+            while (x < str.length)
+                GUI.addInvSlot(loadSlot())
+            for (let i = 0; i < 128; i++)
+                GUI.addInvDriffSlot(new GUIInvDriffSlot())
+        } else {
+            let mx = get2()
+            for (let i = 0; i < mx; i++)
+                GUI.addInvSlot(loadSlot())
+            mx = get2()
+            for (let i = 0; i < mx; i++) {
+                let slot = new GUIInvDriffSlot()
+                slot.insert(loadDriff(null))
+                GUI.addInvDriffSlot(slot)
+            }
+        }
 
         Build.calculate()
 
@@ -294,7 +317,8 @@ class Build {
             GUI.addEqSlot(loadSlot(jsonSlot))
         for (let jsonSlot of map.inv)
             GUI.addInvSlot(loadSlot(jsonSlot))
-
+        for (let i = 0; i < 128; i++)
+            GUI.addInvDriffSlot(new GUIInvDriffSlot())
 
         Build.calculate()
 
@@ -306,13 +330,17 @@ class Build {
             slot.insertItem(null)
         for (let slot of GUI.eqSlots)
             slot.insertItem(null)
+        for (let slot of GUI.invDriffSlots)
+            slot.insert(null)
         GUIConf.edit(null)
 
         Build.calculate()
 
+        GUI.invDriffSlots.splice(0, GUI.invDriffSlots.length)
         GUI.invSlots.splice(0, GUI.invSlots.length)
         GUI.eqSlots.splice(0, GUI.eqSlots.length)
 
+        GUI.invDriffs.innerHTML = ''
         GUI.inv.innerHTML = ''
         GUI.eq.innerHTML = ''
     }
@@ -527,6 +555,9 @@ class Driff {
     refreshGUI() {
         this.imgSlot.src = this.data.getIconSlot(this.tier)
         this.imgIcon.src = this.data.geticonMod()
+
+        if (GUIConf.editDriff != null && GUIConf.editDriff.driff === this)
+            GUIConf.editDriff.refreshGUI()
     }
 
     /**
@@ -547,6 +578,7 @@ class Driff {
         this.lvl = lvl
 
         this.checkCalc()
+        this.refreshGUI()
     }
 
     /**
@@ -563,7 +595,7 @@ class Driff {
     }
 
     checkCalc() {
-        if (this.slot.item.slot != null && this.slot.item.slot.isEq())
+        if (this.slot != null && this.slot.item.slot != null && this.slot.item.slot.isEq())
             Build.calculate()
     }
 
@@ -574,7 +606,11 @@ class Driff {
         let x = this.tier + this.lvl - 1
         if (this.lvl >= 19)
             x += this.lvl - 18
-        return this.data.amp * x * (this.slot.item.data.epik ? 1.6 : 1)
+
+        if (this.slot != null)
+            x *= this.slot.item.data.epik ? 1.6 : 1
+
+        return this.data.amp * x
     }
 
 }
@@ -616,6 +652,7 @@ class GUI {
     static body = document.getElementById('build')
     static eq = document.getElementById('buildeq')
     static inv = document.getElementById('buildinv')
+    static invDriffs = document.getElementById('buildinvDriffs')
     static select = document.getElementById('buildItemSlectDiv')
     static info = document.getElementById('buildinfo')
     static conf = document.getElementById('buildconf')
@@ -623,6 +660,8 @@ class GUI {
 
     static eqSlots = []
     static invSlots = []
+    static invDriffSlots = []
+    static invDriffsSlots = []
 
     static init() {
         // Sloty
@@ -631,6 +670,8 @@ class GUI {
 
         for (let i = 0; i < 32; i++)
             GUI.addInvSlot(new GUISlot(null))
+        for (let i = 0; i < 128; i++)
+            GUI.addInvDriffSlot(new GUIInvDriffSlot())
 
         // Conf
         GUIConf.init()
@@ -667,6 +708,16 @@ class GUI {
 
     /**
      * 
+     * @param {GUIInvDriffSlot} slot
+     */
+    static addInvDriffSlot(slot) {
+        GUI.invDriffSlots.push(slot)
+        GUI.invDriffs.appendChild(slot.get())
+    }
+
+
+    /**
+     * 
      * @param {GUISlot} slot
      */
     static addEqSlot(slot) {
@@ -689,6 +740,23 @@ class GUI {
         let slot = new GUISlot(null)
         GUI.addInvSlot(slot)
         slot.insertItem(item)
+    }
+
+    /**
+     * 
+     * @param {Driff} driff 
+     */
+    static addToInvDriff(driff) {
+        for (let slot of GUI.invDriffSlots) {
+            if (slot.driff == null) {
+                slot.insert(driff)
+                return
+            }
+        }
+
+        let slot = new GUIInvDriffSlot()
+        GUI.addInvDriffSlot(slot)
+        slot.insert(driff)
     }
 
     /**
@@ -717,6 +785,8 @@ class GUI {
 class GUIConf {
     /** @type {GUIItem} */
     static editItem = null
+        /** @type {GUIInvDriffSlot} */
+    static editDriff = null
     static divs = {
         save: {
             main: document.getElementById('buildSaveLoad'),
@@ -728,6 +798,9 @@ class GUIConf {
         nav: {
             make: document.getElementById('buildConfNavMake'),
             save: document.getElementById('buildConfNavSave'),
+
+            invItems: document.getElementById('buildInvNavBItemy'),
+            invDriffs: document.getElementById('buildInvNavBDriffy'),
         },
 
         edit: {
@@ -772,7 +845,18 @@ class GUIConf {
             if (GUIConf.editItem != null)
                 GUIConf.edit(null)
 
-            this.divs.save.main.style.setProperty('display', 'block')
+            GUIConf.divs.save.main.style.setProperty('display', 'block')
+        }
+
+        GUIConf.divs.nav.invItems.onclick = () => {
+            GUI.inv.style.setProperty('display', 'block')
+            GUI.select.style.setProperty('display', 'none')
+            GUI.invDriffs.style.setProperty('display', 'none')
+        }
+        GUIConf.divs.nav.invDriffs.onclick = () => {
+            GUI.inv.style.setProperty('display', 'none')
+            GUI.select.style.setProperty('display', 'none')
+            GUI.invDriffs.style.setProperty('display', 'block')
         }
 
         GUIConf._makeSelect()
@@ -832,6 +916,7 @@ class GUIConf {
         if (GUIConf.editItem != null)
             GUIConf.edit(null)
         GUI.inv.style.setProperty('display', 'none')
+        GUI.invDriffs.style.setProperty('display', 'none')
         GUI.select.style.setProperty('display', 'block')
         GUIConf.divs.nav.make.style.setProperty('background-color', 'green')
     }
@@ -846,21 +931,43 @@ class GUIConf {
      * @param {GUIItem} item 
      */
     static edit(item) {
+        if (GUIConf.editDriff != null)
+            GUIConf.editdriff(null)
+
         if (GUIConf.editItem != null)
             GUIConf.editItem.slot.setActive(false)
 
         GUIConf.editItem = item
         if (item != null) {
-            GUIConf.divs.edit.main.style.setProperty('display', 'block')
-            this.divs.save.main.style.setProperty('display', 'none')
-
             item.slot.setActive(true)
 
             GUIConf.divs.edit.driffs.innerHTML = ''
             for (let driff of item.driffs)
                 GUIConf.divs.edit.driffs.appendChild(driff.getForm())
-        } else
-            GUIConf.divs.edit.main.style.setProperty('display', 'none')
+        }
+
+        GUIConf.setInfo()
+    }
+
+    /**
+     * 
+     * @param {GUIDriffSlot} driff 
+     */
+    static editdriff(driff) {
+        if (GUIConf.editItem != null)
+            GUIConf.edit(null)
+
+        if (GUIConf.editDriff != null)
+            GUIConf.editDriff.setActive(false)
+
+        GUIConf.divs.edit.driffs.innerHTML = ''
+        this.editDriff = driff
+        if (driff != null) {
+            driff.setActive(true)
+            GUIConf.divs.edit.driffs.appendChild(driff.getForm())
+        }
+
+
 
         GUIConf.setInfo()
     }
@@ -871,8 +978,11 @@ class GUIConf {
     static setInfo() {
         let html = ''
 
+        GUIConf.divs.edit.main.style.setProperty('display', 'block')
+        this.divs.save.main.style.setProperty('display', 'none')
+
+        let color = (color, text) => `<span style='color: ${color}'>${text}</span>`
         if (GUIConf.editItem != null) {
-            let color = (color, text) => `<span style='color: ${color}'>${text}</span>`
 
             let data = GUIConf.editItem.data
             html = `
@@ -896,7 +1006,26 @@ class GUIConf {
 
                 html += `<h3>Slot ${i+1}: ${text} </h3>`
             }
-        }
+        } else if (GUIConf.editDriff != null) {
+            let driff = GUIConf.editDriff.driff
+            let data = GUIConf.editDriff.driff.data
+
+            let img = `<span style="position: relative; with: 26px; height: 26px;">${GUIConf.editDriff.driff.getGUI().innerHTML}</span>`
+
+            let text = `${['Subdrif', 'Bidrif', 'Magnidrif', 'ArcyDrif'][driff.tier - 1]} ${data.name}`
+            text = color('lightblue', text)
+
+            html = `
+                <h2>
+                ${img}
+                <span style="margin-left: 30px; margin-right: 4px;">${text}</span>
+                ${img}
+                    <div>${data.fullname} ${driff.effekt()}%</div>
+                </h2>
+                <h3>Potęga: ${driff.power()}</h3>
+                `
+        } else
+            GUIConf.divs.edit.main.style.setProperty('display', 'none')
 
         GUIConf.divs.edit.info.innerHTML = html
     }
@@ -1041,8 +1170,33 @@ class GUIDriffSlot {
         this.inpMod = null
         this.inpLvl = null
         this.inpTier = null
+        this.inpEx = null
 
         this.refreshGUI()
+
+        this.container.onclick = () => {
+            if (GUIConf.editDriff == null) return
+            if (this.driff != null) return
+
+            let driff = GUIConf.editDriff.driff
+
+            for (let slot of this.item.driffs) {
+                if (slot.driff != null && slot.driff.data === driff.data) {
+                    Info.showMessage('Ten mod już jest w tym itemie')
+                    return
+                }
+            }
+
+            this.setDriff(driff)
+            if (this.item.overPower()) {
+                this.setDriff(null)
+                GUIConf.editDriff.insert(driff)
+                Info.showMessage('Przekroczona pojemność')
+            } else {
+                GUIConf.editDriff.insert(null)
+                GUIConf.editdriff(null)
+            }
+        }
     }
 
     refreshGUI() {
@@ -1064,9 +1218,22 @@ class GUIDriffSlot {
         this.container.style.setProperty('background-color', color)
     }
 
-    setDriff(driff) {
+    setDriff(driff, silent = false) {
         this.driff = driff
         this.refreshGUI()
+
+        if (!silent && this.form != null) {
+            this.inpLvl.value = driff == null ? 1 : driff.lvl
+            this.inpTier.value = driff == null ? 1 : driff.tier
+            this.inpMod.value = driff == null ? '' : driff.data.fullname
+
+            this.inpLvl.onchange()
+            this.inpTier.onchange()
+            this.inpMod.onchange()
+        }
+
+        if (!silent && this.item.slot != null && this.item.slot.isEq())
+            Build.calculate()
     }
 
     getForm() {
@@ -1076,7 +1243,7 @@ class GUIDriffSlot {
         this._buildForm()
 
         // Functional
-        this.inpTier.onchange = ev => {
+        this.inpTier.onchange = () => {
             let val = parseInt(this.inpTier.value)
             if (1 > val || val > this.inpTier.getAttribute('max')) {
                 this.inpTier.value = '1'
@@ -1102,7 +1269,7 @@ class GUIDriffSlot {
             this.refreshGUI()
             GUIConf.setInfo()
         }
-        this.inpLvl.onchange = ev => {
+        this.inpLvl.onchange = () => {
             let val = parseInt(this.inpLvl.value)
             if (1 > val || val > this.inpLvl.getAttribute('max')) {
                 this.inpLvl.value = '1'
@@ -1114,11 +1281,11 @@ class GUIDriffSlot {
 
             GUIConf.setInfo()
         }
-        this.inpMod.onchange = ev => {
+        this.inpMod.onchange = () => {
             let data = DriffData.driffs[this.inpMod.value]
             if (!data) {
                 if (this.driff != null)
-                    this.setDriff(null)
+                    this.setDriff(null, true)
             } else {
                 let undo = false
                 for (let driffSlot of this.item.driffs) {
@@ -1127,14 +1294,14 @@ class GUIDriffSlot {
                             break
                 }
                 let undoDriff = this.driff
-                this.setDriff(new Driff(data, this, this.inpLvl.value, this.inpTier.value))
+                this.setDriff(new Driff(data, this, this.inpLvl.value, this.inpTier.value), true)
 
                 if (!undo)
                     undo = this.item.overPower()
 
                 if (undo) {
                     this.inpMod.value = undoDriff == null ? '' : undoDriff.data.fullname
-                    this.setDriff(undoDriff)
+                    this.setDriff(undoDriff, true)
                 }
             }
 
@@ -1145,10 +1312,25 @@ class GUIDriffSlot {
 
             GUIConf.setInfo()
         }
+        this.inpEx.onclick = () => {
+            if (this.driff == null)
+                return
+
+            GUI.addToInvDriff(this.driff)
+            this.setDriff(null)
+
+            this.inpMod.value = ''
+            this.inpMod.onchange()
+            this.inpLvl.value = '1'
+            this.inpLvl.onchange()
+            this.inpTier.value = '1'
+            this.inpTier.onchange()
+        }
 
         if (this.item.data.epik) {
             this.inpTier.disabled = true
             this.inpMod.disabled = true
+            this.inpEx.disabled = true
         }
 
         return this.form
@@ -1211,14 +1393,165 @@ class GUIDriffSlot {
             setTimeout(() => this.inpTier.onchange(null), 1)
         }
 
+        /// Extract
+        this.inpEx = document.createElement('button')
+        this.inpEx.innerText = 'Wyjmij'
+
 
         labelMod.appendChild(this.inpMod)
         labelMod.appendChild(lst)
         this.form.appendChild(labelMod)
+
+        this.form.appendChild(this.inpEx)
     }
 
     get() {
         return this.container
+    }
+}
+class GUIInvDriffSlot {
+    constructor() {
+        /** @type {Driff} */
+        this.driff = null
+
+        this.container = document.createElement('div')
+        this.container.setAttribute('class', 'invGUIDriffSlot')
+
+        this.divText = document.createElement('div')
+        this.divDriff = document.createElement('div')
+        this.divPower = document.createElement('div')
+        this.divEffect = document.createElement('div')
+
+        for (let div of Array.of(this.divText, this.divDriff, this.divPower, this.divEffect))
+            this.container.appendChild(div)
+
+        this.setActive(false)
+
+
+        this.container.onclick = () => {
+            if (this.driff != null)
+                GUIConf.editdriff(this)
+            else if (GUIConf.editDriff != null) {
+                this.insert(GUIConf.editDriff.driff)
+                GUIConf.editDriff.insert(null)
+                GUIConf.editdriff(this)
+            }
+        }
+    }
+
+    /**
+     * 
+     * @param {Driff} driff 
+     */
+    insert(driff) {
+        this.driff = driff
+
+        this.divDriff.innerHTML = ''
+        if (driff == null) {
+            this.divText.innerHTML = ''
+            this.divPower.innerHTML = ''
+            this.divEffect.innerHTML = ''
+        } else {
+            this.divText.innerText = driff.data.name
+            this.divDriff.appendChild(driff.getGUI())
+            this.divPower.innerText = driff.power()
+            this.divEffect.innerText = (Math.round(driff.effekt() * 10) / 10) + '%'
+        }
+    }
+
+    /**
+     * 
+     * @returns {HTMLDivElement}
+     */
+    getForm() {
+        let container = document.createElement('div')
+
+        let fabric = (name, txt, up, down) => {
+            let div = document.createElement('div')
+            let span
+
+            span = document.createElement('span')
+            span.style.setProperty('display', 'inline-block')
+            span.innerText = name + ' '
+            div.appendChild(span)
+
+            let textspan = document.createElement('span')
+            textspan.style.setProperty('display', 'inline-block')
+            textspan.style.setProperty('margin-left', '5px')
+            textspan.innerText = txt
+            div.appendChild(textspan)
+
+            let bUp = document.createElement('div')
+            bUp.setAttribute('class', 'formbUp')
+            let bDown = document.createElement('div')
+            bDown.setAttribute('class', 'formbDown')
+
+            span = document.createElement('span')
+            span.style.setProperty('display', 'inline-block')
+            div.appendChild(span)
+
+            span.appendChild(bUp)
+            span.appendChild(bDown)
+
+
+            bUp.onclick = () => {
+                if (up()) return
+
+                this.driff['set' + name[0].toUpperCase() + name.slice(1)](this.driff[name] + 1)
+
+                textspan.innerText = this.driff[name]
+            }
+            bDown.onclick = () => {
+                if (down()) return
+
+                this.driff['set' + name[0].toUpperCase() + name.slice(1)](this.driff[name] - 1)
+
+                textspan.innerText = this.driff[name]
+            }
+
+            return div
+        }
+
+
+
+        container.appendChild(fabric('tier', this.driff.tier,
+            () => this.driff.tier >= 4,
+            () => this.driff.tier <= 1 || (this.driff.lvl > [6, 11, 16][this.driff.tier - 2])))
+        container.appendChild(fabric('lvl', this.driff.lvl,
+            () => this.driff.lvl >= [6, 11, 16, 21][this.driff.tier - 1],
+            () => this.driff.lvl <= 1))
+
+        return container
+    }
+
+    refreshGUI() {
+        this.insert(this.driff)
+        if (this === GUIConf.editDriff)
+            GUIConf.setInfo()
+    }
+
+    /**
+     * 
+     * @returns {HTMLDivElement}
+     */
+    get() {
+        return this.container
+    }
+
+    /**
+     * 
+     * @param {Boolean} active 
+     */
+    setActive(active) {
+        this.container.style.setProperty('background-color', active ? '#90900050' : '#00000050')
+    }
+
+    /**
+     * 
+     * @returns {Boolean}
+     */
+    isActive() {
+        return this.container.style.getPropertyValue('background-color') == 'rgba(144, 144, 0, 0.314)'
     }
 }
 

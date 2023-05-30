@@ -78,7 +78,6 @@
 }
 
 #build .GUISlot:hover {
-    background-color: cadetblue;
     border: 2px black solid;
 }
 
@@ -193,4 +192,88 @@
     top: 6.5px;
     left: 6.5px;
     width: 13px;
+}
+
+#buildInvNavBItemy,
+#buildInvNavBDriffy {
+    margin: 0 5px;
+    width: 190px;
+    padding: 20px 10px;
+    border: 0;
+    float: left;
+    background-color: rgba(10, 200, 10, .2);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-size: 20px;
+}
+
+#buildInvNavBItemy:hover,
+#buildInvNavBDriffy:hover {
+    background-color: rgba(10, 250, 10, .4);
+}
+
+#build .invGUIDriffSlot {
+    margin: 5px;
+    width: 36px;
+    height: 36px;
+    float: left;
+    border-radius: 10px;
+    border: 2px #0000 solid;
+    position: relative;
+    font-size: 11px
+}
+
+#build .invGUIDriffSlot:hover {
+    border: 2px #000 solid;
+}
+
+#build .invGUIDriffSlot>div {
+    position: absolute;
+    z-index: 2;
+}
+
+#build .invGUIDriffSlot>div:nth-child(1) {
+    top: 0;
+    font-size: 14px;
+    text-align: center;
+    width: 100%;
+}
+
+#build .invGUIDriffSlot>div:nth-child(2) {
+    top: 7px;
+    left: 7px;
+    z-index: 1;
+}
+
+#build .invGUIDriffSlot>div:nth-child(3) {
+    left: 0;
+    bottom: 0;
+    color: white;
+}
+
+#build .invGUIDriffSlot>div:nth-child(4) {
+    right: -5px;
+    bottom: 0;
+    color: aqua;
+}
+
+#build .formbUp {
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    background-color: black;
+    width: 15px;
+    height: 20px;
+    margin: 2px;
+}
+
+#build .formbDown {
+    clip-path: polygon(50% 100%, 0 0, 100% 0);
+    background-color: black;
+    width: 15px;
+    height: 20px;
+    margin: 2px;
+}
+
+#build .formbUp:hover,
+#build .formbDown:hover {
+    background-color: goldenrod;
 }
