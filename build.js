@@ -1227,8 +1227,8 @@ class GUIDriffSlot {
             this.inpTier.value = driff == null ? 1 : driff.tier
             this.inpMod.value = driff == null ? '' : driff.data.fullname
 
-            this.inpLvl.onchange()
             this.inpTier.onchange()
+            this.inpLvl.onchange()
             this.inpMod.onchange()
         }
 
