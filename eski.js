@@ -18,7 +18,7 @@ let labels = div.children[0].children
 let canvas = div.children[1]
 
 function calculate() {
-    let cena = parseInt(labels[0].children[0].value)
+    let cena = parseFloat(labels[0].children[0].value)
     let pl = parseInt(labels[1].children[0].value)
     let ranga = parseInt(labels[2].children[0].value)
 
@@ -57,21 +57,53 @@ function calculate() {
         </tr>`
     }
 
+    // przetapianie
     html = `<table>
     <thead>
         <tr>
-            <th colspan=3>Przetapianie</th>
+            <th colspan=3>Przetapianie (Zysk)</th>
         </tr>
         <tr>
             <th>Ranga</th>
-            <th>Zysk bez inhb</th>
-            <th>Zysk z inhb</th>
+            <th>bez inhb</th>
+            <th>z inhb</th>
         </tr>
     </thead>
     <tbody>${html}</tbody>
     </table>`
 
 
+    // Ładowanie
+    html += `
+    <table style="margin-left: 10px;">
+        <thead>
+            <tr>
+                <th colspan="3">Ładowanie (koszt 10%)</th>
+            </tr>
+            <tr>
+                <th>Ranga</th>
+                <th>z inhb</th>
+                <th>bez inhb</th>
+            </tr>
+        </thead>
+        <tbody>`
+
+    for (let i = 0; i < 12; i++) {
+        let bez = 20 + Math.max(1, i) * cena
+        let z = bez + inh[i] * pl
+
+        html += `
+        <tr>
+            <td>${romanize(i+1)}</td>
+            <td>${Math.round(z) / 10}k</td>
+            <td>${Math.round(bez*5 / 3) / 10}k</td>
+        </tr>`
+    }
+
+    html += '</tbody></table>'
+
+
+    // Flaszki Gorzałki
     html += `<table style='margin-left: 10px;'>
     <thead>
         <tr>
