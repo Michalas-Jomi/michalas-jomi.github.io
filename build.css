@@ -97,6 +97,10 @@
     margin: 5px 0;
 }
 
+#buildInfoDiv h4 {
+    margin: 1px 0;
+}
+
 #buildEditDriffs label {
     margin-left: 15px;
 }

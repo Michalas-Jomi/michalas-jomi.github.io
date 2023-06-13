@@ -33,6 +33,7 @@
         #eski table td,
         #eski table th {
             border: 1px solid black;
+            padding: 3px;
         }
         
         #eski center>* {
@@ -124,7 +125,7 @@
         <article>
             <div class='body' id='eski' style="display: none;">
                 <div>
-                    <label>Cena eski/itemu: <input type='number' value='25' min='0'>(szt [k])</label>
+                    <label>Cena eski/itemu: <input type='number' value='12' min='0'>(szt [k])</label>
                     <!-- TODO obsługa przez js -->
                     <label>Cena platy: <input type='number' value='8' min='0'>(szt [k])</label>
                     <!-- wartości domyślne z cookies -->
@@ -172,14 +173,14 @@
                             <label>
                             <tr>
                                 <td>Moc</td>
-                                <td><input id="healInpMoc" type="number" min="0" value="381"></td>
+                                <td><input id="healInpMoc" type="number" min="0" value="10"></td>
                             </tr>
                         </label>
 
                             <label>
                             <tr>
                                 <td>Wiedza</td>
-                                <td><input id="healInpWiedza" type="number" min="0" value="406"></td>
+                                <td><input id="healInpWiedza" type="number" min="0" value="10"></td>
                             </tr>
                         </label>
 
@@ -200,21 +201,21 @@
                             <label>
                             <tr>
                                 <td>Grupa %</td>
-                                <td><input id="healInpGrp" type="number" step="6.5" min="59" max="189" value="163"></td>
+                                <td><input id="healInpGrp" type="number" step="6.5" min="59" max="189" value="150"></td>
                             </tr>
                         </label>
 
                             <label>
                             <tr>
                                 <td>Rozkaz</td>
-                                <td><input id="healInpRoz" type="number" min="0" value="14"></td>
+                                <td><input id="healInpRoz" type="number" min="0" value="15"></td>
                             </tr>
                         </label>
 
                             <label>
                             <tr>
                                 <td>Poświęcenie</td>
-                                <td><input id="healInpPswc" type="number" min="0" value="10"></td>
+                                <td><input id="healInpPswc" type="number" min="0" value="25"></td>
                             </tr>
                         </label>
 
@@ -235,6 +236,9 @@
                             <tbody id="healOutput">
                             </tbody>
                         </table>
+                        <p>
+                            <h6 style="margin-top: 2px; font-size: 14px;">Dokładność +- 2</h6 style="margin-top: 5px; font-size: 16px;">
+                        </p>
                     </div>
 
                 </center>

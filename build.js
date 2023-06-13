@@ -1006,6 +1006,12 @@ class GUIConf {
 
                 html += `<h3>Slot ${i+1}: ${text} </h3>`
             }
+            for (let i of data.getStatsUp())
+                html += `<h4>${GUIItemData.statName(i)}: ${GUIConf.editItem.getStat(i)}</h4>`
+            html += '</br>'
+            for (let i of data.getStats())
+                html += `<h4>${GUIItemData.statName(i)}: ${GUIConf.editItem.getStat(i)}</h4>`
+
         } else if (GUIConf.editDriff != null) {
             let driff = GUIConf.editDriff.driff
             let data = GUIConf.editDriff.driff.data
@@ -1621,6 +1627,10 @@ class GUIItem {
         this.setIcon(this.data.getImgSrc())
     }
 
+    getStat(stat) {
+        return this.data.getStat(stat)
+    }
+
     /**
      * zwraca zajętą pojemność
      * @returns {number}
@@ -1691,13 +1701,14 @@ class GUIItemData {
      * @param {number} rank 
      * @param {String} type 
      */
-    constructor(name, fullname, rank, type, epik = false) {
+    constructor(name, fullname, rank, type, stats, epik = false) {
         this.id = GUIItemData.__id++;
         this.fullname = fullname
         this.name = name
         this.rank = rank
         this.type = type
         this.epik = epik
+        this._stats = stats
 
 
         if (!(type in GUIItemData.items))
@@ -1713,6 +1724,69 @@ class GUIItemData {
      */
     getImgSrc() {
         return `icons/eq/${this.type}/${this.name}.png`
+    }
+
+    /**
+     * 
+     * @param {String} stat
+     * @returns {String | Number | null} 
+     */
+    getStat(stat) {
+        let w = this._stats[stat]
+        return w === undefined ? null : w
+    }
+
+
+    static _statsNames = {
+        waga: 'waga',
+        wartosc: 'wartość',
+        pz: 'pż',
+        konda: 'kondycja',
+        mana: 'mana',
+        moc: 'moc',
+        sila: 'siła',
+        wiedza: 'wiedza',
+        zreka: 'zręczność',
+        obr: 'obrażenia',
+        r_obr: 'rodzaj_obrażeń',
+        res_ene: 'odporność_energia',
+        res_ogien: 'odporność_ogień',
+        res_zimno: 'odporność_zimno',
+        res_uro: 'odporność_uroki',
+        res_klut: 'pancerz_kłute',
+        res_obuch: 'pancerz_obuchowe',
+        res_siek: 'pancerz_sieczne',
+        wym_klasa: 'wymagana_klasa',
+        wym_lvl: 'wymagany_poziom',
+        wym_moc: 'wymagana_moc',
+        wym_sila: 'wymagana_siła',
+        wym_wiedza: 'wymagana_wiedza',
+        wym_zreka: 'wymagana_zręczność',
+    }
+
+    getStats() {
+        return this._getStats(['obr', 'r_obr', 'moc', 'wiedza', 'sila', 'zreka', 'pz', 'mana', 'konda', 'res_ene', 'res_ogien', 'res_zimno', 'res_uro', 'res_siek', 'res_obuch', 'res_klut'])
+    }
+    getStatsUp() {
+        return this._getStats(['wartosc', 'waga', 'wym_lvl', 'wym_klasa', 'wym_moc', 'wym_wiedza', 'wym_sila', 'wym_zreka'])
+    }
+    _getStats(lst) {
+        let w = []
+
+        for (let i of lst)
+            if (this.getStat(i) !== null)
+                w.push(i)
+
+        return w
+    }
+
+    /**
+     * 
+     * @param {String} stat 
+     * @returns {String}
+     */
+    static statName(stat) {
+        return GUIItemData._statsNames[stat]
     }
 
     /**
@@ -1781,175 +1855,176 @@ function initData() {
     new DriffData('heb', 'Odporność na Unieruchomienie', .5, 1, NaN, 'Specjalny')
 
 
+    new GUIItemData('maiarot', 'Maiarot', 2, 'Amulety', { waga: 3, wartosc: 36000, pz: 120, res_uro: 20, wym_lvl: 18 })
+    new GUIItemData('derengil', 'Derengil', 2, 'Bron', { waga: 2, wartosc: 36000, konda: 40, sila: 8, zreka: 6, obr: 66, r_obr: 'sieczne', wym_lvl: 18, wym_sila: 20 })
+    new GUIItemData('sturprang', 'Sturprang', 2, 'Bron', { waga: 2, wartosc: 36000, mana: 40, moc: 8, wiedza: 6, obr: 71, r_obr: 'obuchowe', wym_lvl: 18, wym_moc: 20 })
+    new GUIItemData('ayol', 'Ayol', 2, 'Bron', { waga: 15, wartosc: 40000, konda: 60, sila: 5, zreka: 9, obr: 74, r_obr: 'kłute', wym_lvl: 20, wym_zreka: 20 })
+    new GUIItemData('czengsvesy', 'Czengsvesy', 2, 'Buty', { waga: 8, wartosc: 72000, mana: 30, moc: 7, wiedza: 10, res_klut: 25, res_obuch: 22, res_siek: 23, wym_lvl: 24, wym_wiedza: 25 })
+    new GUIItemData('martumal', 'Martumal', 2, 'Helmy', { waga: 15, wartosc: 40000, mana: 40, moc: 6, wiedza: 4, res_uro: 20, res_klut: 21, res_obuch: 20, res_siek: 19, wym_lvl: 20, wym_moc: 20 })
+    new GUIItemData('arcanscape', 'Arcanscape', 2, 'Pierki', { waga: 2, wartosc: 40000, pz: 70, konda: 20, mana: 20, res_uro: 30, wym_lvl: 20 })
 
-    new GUIItemData('maiarot', 'Maiarot', 2, 'Amulety');
-    new GUIItemData('derengil', 'Derengil', 2, 'Bron');
-    new GUIItemData('sturprang', 'Sturprang', 2, 'Bron');
-    new GUIItemData('ayol', 'Ayol', 2, 'Bron');
-    new GUIItemData('czengsvesy', 'Czengsvesy', 2, 'Buty');
-    new GUIItemData('martumal', 'Martumal', 2, 'Helmy');
-    new GUIItemData('arcanscape', 'Arcanscape', 2, 'Pierki');
+    new GUIItemData('markahn', 'Markahn', 3, 'Amulety', { waga: 2, wartosc: 136000, pz: 70, konda: 20, mana: 20, wiedza: 3, zreka: 3, res_ogien: 30, res_uro: 30, wym_lvl: 32 })
+    new GUIItemData('sphaera', 'Sphaera', 3, 'Amulety', { waga: 2, wartosc: 152000, konda: 80, sila: 8, zreka: 6, res_ene: 40, wym_lvl: 34, wym_sila: 35 })
+    new GUIItemData('ostolbin', 'Ostolbin', 3, 'Amulety', { waga: 2, wartosc: 160000, pz: 120, mana: 120, moc: 6, wiedza: 5, wym_lvl: 35, wym_moc: 35 })
+    new GUIItemData('obroza_wladcy', 'Obroża Władcy', 3, 'Amulety', { waga: 6, wartosc: 160000, pz: 80, moc: 14, wiedza: 13, wym_lvl: 35, wym_moc: 35 })
+    new GUIItemData('rolrak', 'Rolrak', 3, 'Bron', { waga: 5, wartosc: 72000, konda: 40, sila: 6, zreka: 8, obr: 81, r_obr: 'sieczne', res_uro: 20, wym_lvl: 24, wym_zreka: 25 })
+    new GUIItemData('tasak', 'Tasak', 3, 'Bron', { waga: 40, wartosc: 56000, pz: 30, konda: 60, sila: 13, obr: 83, r_obr: 'sieczne', wym_lvl: 22, wym_sila: 25 })
+    new GUIItemData('geomorph_core', 'Geomorph Core', 3, 'Bron', { waga: 15, wartosc: 136000, mana: 150, moc: 15, wiedza: 2, obr: 95, r_obr: 'obuchowe', wym_lvl: 32, wym_moc: 30 })
+    new GUIItemData('davgretor', 'Davgretor', 3, 'Bron', { waga: 35, wartosc: 136000, pz: 100, konda: 50, sila: 15, zreka: 2, obr: 103, r_obr: 'obuchowe', wym_lvl: 32, wym_sila: 30 })
+    new GUIItemData('piroklast', 'Piroklast', 3, 'Bron', { waga: 15, wartosc: 152000, pz: 80, konda: 60, sila: 2, zreka: 9, obr: 98, r_obr: 'kłute', res_ogien: 20, res_zimno: 10, wym_lvl: 34, wym_zreka: 35 })
+    new GUIItemData('isverd', 'Isverd', 3, 'Bron', { waga: 15, wartosc: 152000, pz: 120, konda: 110, mana: 20, obr: 90, r_obr: 'sieczne', res_ogien: 10, res_zimno: 20, wym_lvl: 34 })
+    new GUIItemData('tezec', 'Tężec', 3, 'Bron', { waga: 5, wartosc: 136000, pz: 90, mana: 40, moc: 4, wiedza: 9, obr: 95, r_obr: 'kłute', res_uro: 20, wym_lvl: 32, wym_wiedza: 35 })
+    new GUIItemData('sidun', 'Sidun', 3, 'Bron', { waga: 20, wartosc: 152000, pz: 100, konda: 50, sila: 19, obr: 107, r_obr: 'sieczne', wym_lvl: 34, wym_sila: 35 })
+    new GUIItemData('irkamale', 'Irkamale', 3, 'Bron', { waga: 6, wartosc: 160000, pz: 120, konda: 80, mana: 40, sila: 4, zreka: 7, obr: 100, r_obr: 'obuchowe', wym_lvl: 35, wym_zreka: 35 })
+    new GUIItemData('lysmary', 'Lysmary', 3, 'Buty', { waga: 6, wartosc: 152000, pz: 80, mana: 60, moc: 8, wiedza: 2, res_klut: 29, res_obuch: 27, res_siek: 29, wym_lvl: 34, wym_moc: 35 })
+    new GUIItemData('jeroszki', 'Jeroszki', 3, 'Buty', { waga: 15, wartosc: 160000, pz: 100, konda: 100, mana: 20, res_ogien: 20, res_klut: 26, res_obuch: 26, res_siek: 26, wym_lvl: 35 })
+    new GUIItemData('moczary', 'Moczary', 3, 'Buty', { waga: 10, wartosc: 120000, pz: 30, sila: 5, zreka: 3, res_klut: 25, res_obuch: 22, res_siek: 23, wym_lvl: 30, wym_sila: 30 })
+    new GUIItemData('grzebien', 'Grzebień', 3, 'Helmy', { waga: 15, wartosc: 120000, pz: 20, konda: 40, sila: 8, zreka: 4, res_uro: 20, res_klut: 28, res_obuch: 24, res_siek: 23, wym_lvl: 30, wym_sila: 30 })
+    new GUIItemData('ishelm', 'Ishelm', 3, 'Helmy', { waga: 12, wartosc: 152000, pz: 30, konda: 10, sila: 6, zreka: 10, res_klut: 33, res_obuch: 33, res_siek: 29, wym_lvl: 34, wym_zreka: 35 })
+    new GUIItemData('khalam', 'Khalam', 3, 'Helmy', { waga: 8, wartosc: 136000, mana: 60, moc: 6, wiedza: 8, res_uro: 20, res_klut: 25, res_obuch: 25, res_siek: 25, wym_lvl: 32, wym_wiedza: 35 })
+    new GUIItemData('anabolik', 'Anabolik', 3, 'Paski', { waga: 10, wartosc: 72000, pz: 110, sila: 8, zreka: 5, wym_lvl: 24, wym_sila: 25 })
+    new GUIItemData('radius_electricum', 'Radius Electricum', 3, 'Paski', { waga: 1, wartosc: 152000, mana: 70, moc: 9, wiedza: 6, res_ene: 40, wym_lvl: 34, wym_moc: 35 })
+    new GUIItemData('promuris', 'Promuris', 3, 'Paski', { waga: 10, wartosc: 160000, pz: 60, sila: 15, zreka: 14, wym_lvl: 35, wym_sila: 35 })
+    new GUIItemData('koriatula', 'Koriatula', 3, 'Paski', { waga: 10, wartosc: 160000, pz: 80, konda: 20, mana: 20, moc: 3, wiedza: 5, wym_lvl: 35, wym_wiedza: 35 })
+    new GUIItemData('fiskorl', 'Fiskorl', 3, 'Pierki', { waga: 2, wartosc: 104000, sila: 9, zreka: 7, res_uro: 20, res_zimno: 20, wym_lvl: 28, wym_sila: 25 })
+    new GUIItemData('basileus', 'Basileus', 3, 'Pierki', { waga: 2, wartosc: 104000, sila: 9, zreka: 7, res_uro: 20, res_zimno: 20, wym_lvl: 28, wym_sila: 25 })
+    new GUIItemData('uguns', 'Uguns', 3, 'Pierki', { waga: 2, wartosc: 152000, pz: 140, konda: 40, mana: 40, res_ogien: 20, res_uro: 20, wym_lvl: 34 })
+    new GUIItemData('fulgur', 'Fulgur', 3, 'Pierki', { waga: 2, wartosc: 152000, pz: 40, mana: 10, moc: 9, wiedza: 8, res_ene: 20, res_uro: 20, wym_lvl: 34, wym_moc: 35 })
+    new GUIItemData('karlder', 'Karlder', 3, 'Pierki', { waga: 2, wartosc: 152000, pz: 40, konda: 10, sila: 9, zreka: 8, res_ene: 20, res_uro: 20, wym_lvl: 34, wym_sila: 35 })
+    new GUIItemData('brassary', 'Brassary', 3, 'Rekawice', { waga: 6, wartosc: 152000, pz: 10, mana: 60, moc: 10, wiedza: 5, res_ogien: 20, res_uro: 20, wym_lvl: 34, wym_moc: 35 })
+    new GUIItemData('gest_wladcy', 'Gest Władcy', 3, 'Rekawice', { waga: 8, wartosc: 136000, pz: 60, konda: 40, mana: 20, sila: 12, zreka: 8, wym_lvl: 32, wym_sila: 35 })
+    new GUIItemData('fraxy', 'Fraxy', 3, 'Rekawice', { waga: 8, wartosc: 120000, pz: 50, mana: 40, moc: 5, wiedza: 13, res_uro: 10, wym_lvl: 30, wym_moc: 30 })
+    new GUIItemData('isthrimm', 'Isthrimm', 3, 'Tarcze Karwasze', { waga: 40, wartosc: 152000, pz: 80, konda: 60, res_ogien: 25, res_klut: 30, res_obuch: 30, res_siek: 31, wym_klasa: 'rycerz', wym_lvl: 34 })
+    new GUIItemData('bartaur', 'Bartaur', 3, 'Zbroje', { waga: 15, wartosc: 72000, mana: 50, moc: 5, wiedza: 8, res_klut: 25, res_obuch: 25, res_siek: 25, wym_lvl: 24, wym_wiedza: 25 })
+    new GUIItemData('brunnle', 'Brunnle', 3, 'Zbroje', { waga: 30, wartosc: 152000, pz: 60, konda: 40, sila: 7, zreka: 5, res_klut: 29, res_obuch: 31, res_siek: 29, wym_lvl: 34, wym_sila: 35 })
 
-    new GUIItemData('markahn', 'Markahn', 3, 'Amulety');
-    new GUIItemData('sphaera', 'Sphaera', 3, 'Amulety');
-    new GUIItemData('ostolbin', 'Ostolbin', 3, 'Amulety');
-    new GUIItemData('obroza_wladcy', 'Obroża Władcy', 3, 'Amulety');
-    new GUIItemData('rolrak', 'Rolrak', 3, 'Bron');
-    new GUIItemData('tasak', 'Tasak', 3, 'Bron');
-    new GUIItemData('geomorph_core', 'Geomorph Core', 3, 'Bron');
-    new GUIItemData('davgretor', 'Davgretor', 3, 'Bron');
-    new GUIItemData('piroklast', 'Piroklast', 3, 'Bron');
-    new GUIItemData('isverd', 'Isverd', 3, 'Bron');
-    new GUIItemData('tezec', 'Tężec', 3, 'Bron');
-    new GUIItemData('sidun', 'Sidun', 3, 'Bron');
-    new GUIItemData('irkamale', 'Irkamale', 3, 'Bron');
-    new GUIItemData('lysmary', 'Lysmary', 3, 'Buty');
-    new GUIItemData('jeroszki', 'Jeroszki', 3, 'Buty');
-    new GUIItemData('moczary', 'Moczary', 3, 'Buty');
-    new GUIItemData('grzebien', 'Grzebień', 3, 'Helmy');
-    new GUIItemData('ishelm', 'Ishelm', 3, 'Helmy');
-    new GUIItemData('khalam', 'Khalam', 3, 'Helmy');
-    new GUIItemData('anabolik', 'Anabolik', 3, 'Paski');
-    new GUIItemData('radius_electricum', 'Radius Electricum', 3, 'Paski');
-    new GUIItemData('promuris', 'Promuris', 3, 'Paski');
-    new GUIItemData('koriatula', 'Koriatula', 3, 'Paski');
-    new GUIItemData('fiskorl', 'Fiskorl', 3, 'Pierki');
-    new GUIItemData('basileus', 'Basileus', 3, 'Pierki');
-    new GUIItemData('uguns', 'Uguns', 3, 'Pierki');
-    new GUIItemData('fulgur', 'Fulgur', 3, 'Pierki');
-    new GUIItemData('karlder', 'Karlder', 3, 'Pierki');
-    new GUIItemData('brassary', 'Brassary', 3, 'Rekawice');
-    new GUIItemData('gest_wladcy', 'Gest Władcy', 3, 'Rekawice');
-    new GUIItemData('fraxy', 'Fraxy', 3, 'Rekawice');
-    new GUIItemData('isthrimm', 'Isthrimm', 3, 'Tarcze Karwasze');
-    new GUIItemData('bartaur', 'Bartaur', 3, 'Zbroje');
-    new GUIItemData('brunnle', 'Brunnle', 3, 'Zbroje');
+    new GUIItemData('caratris', 'Caratris', 4, 'Amulety', { waga: 2, wartosc: 450000, pz: 30, res_ene: 35, res_ogien: 35, res_uro: 35, res_zimno: 35, wym_lvl: 45 })
+    new GUIItemData('smoczy_gnat', 'Smoczy Gnat', 4, 'Bron', { waga: 15, wartosc: 450000, pz: 70, mana: 140, moc: 20, wiedza: 4, obr: 117, r_obr: 'obuchowe', wym_lvl: 45, wym_moc: 45 })
+    new GUIItemData('navigon', 'Navigon', 4, 'Pierki', { waga: 2, wartosc: 450000, pz: 80, mana: 50, moc: 12, wiedza: 20, wym_lvl: 45, wym_wiedza: 45 })
+    new GUIItemData('nit', 'Nit', 4, 'Pierki', { waga: 2, wartosc: 450000, pz: 80, mana: 50, sila: 12, zreka: 20, wym_lvl: 45, wym_zreka: 45 })
+    new GUIItemData('smocze_skrzydlo', 'Smocze Skrzydło', 4, 'Tarcze Karwasze', { waga: 30, wartosc: 450000, pz: 100, konda: 60, sila: 4, zreka: 6, res_klut: 36, res_obuch: 36, res_siek: 36, wym_klasa: 'rycerz', wym_lvl: 45, wym_sila: 45 })
 
-    new GUIItemData('caratris', 'Caratris', 4, 'Amulety');
-    new GUIItemData('smoczy_gnat', 'Smoczy Gnat', 4, 'Bron');
-    new GUIItemData('navigon', 'Navigon', 4, 'Pierki');
-    new GUIItemData('nit', 'Nit', 4, 'Pierki');
-    new GUIItemData('smocze_skrzydlo', 'Smocze Skrzydło', 4, 'Tarcze Karwasze');
+    new GUIItemData('valazan', 'Valazan', 5, 'Amulety', { waga: 3, wartosc: 700000, pz: 50, mana: 90, moc: 9, wiedza: 26, wym_lvl: 50, wym_wiedza: 50 })
+    new GUIItemData('danthum', 'Danthum', 5, 'Amulety', { waga: 3, wartosc: 700000, pz: 50, konda: 90, sila: 9, zreka: 26, wym_lvl: 50, wym_zreka: 50 })
+    new GUIItemData('ognisty_mlot', 'Ognisty Młot', 5, 'Bron', { waga: 30, wartosc: 950000, pz: 120, konda: 50, sila: 28, zreka: 10, obr: 148, r_obr: 'obuchowe', wym_lvl: 55, wym_sila: 55 })
+    new GUIItemData('tangnary', 'Tangnary', 5, 'Buty', { waga: 12, wartosc: 700000, pz: 50, konda: 30, sila: 11, zreka: 13, res_ene: 15, res_klut: 33, res_obuch: 27, res_siek: 33, wym_lvl: 50, wym_zreka: 50 })
+    new GUIItemData('gathril', 'Gathril', 5, 'Helmy', { waga: 12, wartosc: 950000, pz: 140, res_ene: 20, res_ogien: 20, res_uro: 10, res_zimno: 20, res_klut: 37, res_obuch: 38, res_siek: 35, wym_lvl: 55 })
+    new GUIItemData('czacha', 'Czacha', 5, 'Helmy', { waga: 20, wartosc: 950000, pz: 130, mana: 40, moc: 18, wiedza: 14, res_klut: 25, res_obuch: 25, res_siek: 25, wym_lvl: 55, wym_moc: 55 })
+    new GUIItemData('sentrion', 'Sentrion', 5, 'Paski', { waga: 15, wartosc: 1200000, pz: 150, mana: 110, moc: -5, wiedza: 30, res_zimno: 30, wym_lvl: 60, wym_wiedza: 60 })
+    new GUIItemData('bryza', 'Bryza', 5, 'Peleryny', { waga: 15, wartosc: 450000, pz: 200, konda: 60, mana: 30, sila: 7, zreka: 9, wym_lvl: 45, wym_zreka: 45 })
+    new GUIItemData('nurthil', 'Nurthil', 5, 'Peleryny', { waga: 15, wartosc: 950000, pz: -90, mana: -50, moc: 39, wiedza: 24, res_ogien: 20, wym_lvl: 55, wym_moc: 55 })
+    new GUIItemData('xenothor', 'Xenothor', 5, 'Peleryny', { waga: 15, wartosc: 1200000, pz: -40, konda: -50, sila: 39, zreka: 24, res_ogien: 20, wym_lvl: 60, wym_sila: 60 })
+    new GUIItemData('balast', 'Balast', 5, 'Pierki', { waga: 3, wartosc: 450000, pz: 250, konda: 40, mana: 40, res_ene: 10, res_ogien: 10, res_uro: 10, res_zimno: 10, wym_lvl: 45 })
+    new GUIItemData('vaekany', 'Vaekany', 5, 'Rekawice', { waga: 15, wartosc: 1200000, pz: 20, mana: 310, moc: 14, wiedza: 13, wym_lvl: 60, wym_moc: 60 })
+    new GUIItemData('tirhel', 'Tirhel', 5, 'Spodnie', { waga: 20, wartosc: 950000, pz: 140, res_ene: 20, res_ogien: 20, res_uro: 10, res_zimno: 20, res_klut: 38, res_obuch: 35, res_siek: 37, wym_lvl: 55 })
+    new GUIItemData('wzorek', 'Wzorek', 5, 'Spodnie', { waga: 20, wartosc: 950000, pz: 140, mana: 110, moc: 4, wiedza: 20, res_klut: 25, res_obuch: 25, res_siek: 25, wym_lvl: 55, wym_wiedza: 55 })
+    new GUIItemData('obdartusy', 'Obdartusy', 5, 'Spodnie', { waga: 20, wartosc: 950000, pz: 130, sila: 14, zreka: 10, res_klut: 37, res_obuch: 32, res_siek: 36, wym_lvl: 55, wym_sila: 55 })
+    new GUIItemData('berglisy', 'Berglisy', 5, 'Tarcze Karwasze', { waga: 5, wartosc: 1200000, pz: 240, mana: 60, moc: 12, wiedza: 18, wym_lvl: 60, wym_wiedza: 60 })
+    new GUIItemData('geury', 'Geury', 5, 'Tarcze Karwasze', { waga: 5, wartosc: 1200000, pz: 240, konda: 60, sila: 12, zreka: 18, wym_lvl: 60, wym_zreka: 60 })
+    new GUIItemData('pancerz_komandorski', 'Pancerz Komandorski', 5, 'Zbroje', { waga: 22, wartosc: 450000, pz: 60, konda: 30, mana: 80, moc: 8, wiedza: 12, res_klut: 26, res_obuch: 28, res_siek: 26, wym_lvl: 45, wym_wiedza: 45 })
+    new GUIItemData('virthil', 'Virthil', 5, 'Zbroje', { waga: 40, wartosc: 950000, pz: 140, res_ene: 20, res_ogien: 20, res_uro: 10, res_zimno: 20, res_klut: 35, res_obuch: 37, res_siek: 38, wym_lvl: 55 })
+    new GUIItemData('diabolo', 'Diabolo', 5, 'Zbroje', { waga: 15, wartosc: 950000, pz: 150, mana: 150, moc: 28, wiedza: -9, res_klut: 25, res_obuch: 25, res_siek: 25, wym_lvl: 55, wym_moc: 55 })
+    new GUIItemData('opoka_bogow', 'Opoka Bogów', 5, 'Zbroje', { waga: 15, wartosc: 950000, pz: 120, konda: 120, sila: 10, zreka: 9, res_klut: 33, res_obuch: 29, res_siek: 28, wym_lvl: 55, wym_sila: 55 })
 
-    new GUIItemData('valazan', 'Valazan', 5, 'Amulety');
-    new GUIItemData('danthum', 'Danthum', 5, 'Amulety');
-    new GUIItemData('ognisty_mlot', 'Ognisty Młot', 5, 'Bron');
-    new GUIItemData('tangnary', 'Tangnary', 5, 'Buty');
-    new GUIItemData('gathril', 'Gathril', 5, 'Helmy');
-    new GUIItemData('czacha', 'Czacha', 5, 'Helmy');
-    new GUIItemData('sentrion', 'Sentrion', 5, 'Paski');
-    new GUIItemData('bryza', 'Bryza', 5, 'Peleryny');
-    new GUIItemData('nurthil', 'Nurthil', 5, 'Peleryny');
-    new GUIItemData('xenothor', 'Xenothor', 5, 'Peleryny');
-    new GUIItemData('balast', 'Balast', 5, 'Pierki');
-    new GUIItemData('vaekany', 'Vaekany', 5, 'Rekawice');
-    new GUIItemData('tirhel', 'Tirhel', 5, 'Spodnie');
-    new GUIItemData('wzorek', 'Wzorek', 5, 'Spodnie');
-    new GUIItemData('obdartusy', 'Obdartusy', 5, 'Spodnie');
-    new GUIItemData('berglisy', 'Berglisy', 5, 'Tarcze Karwasze');
-    new GUIItemData('geury', 'Geury', 5, 'Tarcze Karwasze');
-    new GUIItemData('pancerz_komandorski', 'Pancerz Komandorski', 5, 'Zbroje');
-    new GUIItemData('virthil', 'Virthil', 5, 'Zbroje');
-    new GUIItemData('diabolo', 'Diabolo', 5, 'Zbroje');
-    new GUIItemData('opoka_bogow', 'Opoka Bogów', 5, 'Zbroje');
+    new GUIItemData('zemsta_ivravula', 'Zemsta Ivravula', 6, 'Amulety', { waga: 2, wartosc: 2200000, pz: 500, konda: 40, mana: 40, res_ene: 10, res_ogien: 10, res_uro: 10, res_zimno: 10, wym_lvl: 70 })
+    new GUIItemData('virral', 'Virral', 6, 'Bron', { waga: 15, wartosc: 1500000, pz: 100, konda: 100, mana: 30, sila: 15, zreka: 25, obr: 148, r_obr: 'kłute', wym_lvl: 63, wym_zreka: 60 })
+    new GUIItemData('urntsul', 'Urntsul', 6, 'Bron', { waga: 4, wartosc: 1500000, pz: 290, mana: 100, moc: 14, wiedza: 10, obr: 148, r_obr: 'sieczne', wym_lvl: 63, wym_moc: 60 })
+    new GUIItemData('buoriany', 'Buoriany', 6, 'Bron', { waga: 20, wartosc: 2200000, pz: 100, konda: 70, mana: 50, sila: 34, zreka: 14, obr: 160, r_obr: 'sieczne', wym_lvl: 70, wym_sila: 70 })
+    new GUIItemData('lawina', 'Lawina', 6, 'Bron', { waga: 30, wartosc: 2200000, pz: 150, konda: 30, mana: 20, sila: 30, zreka: 20, obr: 143, r_obr: 'obuchowe', wym_lvl: 70, wym_sila: 70 })
+    new GUIItemData('thorimmy', 'Thorimmy', 6, 'Buty', { waga: 15, wartosc: 2200000, pz: 160, mana: 40, moc: 9, wiedza: 20, res_zimno: 30, res_klut: 30, res_obuch: 30, res_siek: 30, wym_lvl: 70, wym_wiedza: 70 })
+    new GUIItemData('ghaitarog', 'Ghaitarog', 6, 'Helmy', { waga: 15, wartosc: 1700000, pz: 120, konda: 100, sila: 7, zreka: 9, res_zimno: 30, res_klut: 35, res_obuch: 35, res_siek: 35, wym_lvl: 65, wym_zreka: 65 })
+    new GUIItemData('dagorilm', 'Dagorilm', 6, 'Paski', { waga: 15, wartosc: 2200000, pz: 150, konda: 80, mana: 20, sila: 24, zreka: 21, wym_lvl: 70, wym_sila: 70 })
+    new GUIItemData('debba', 'Debba', 6, 'Peleryny', { waga: 10, wartosc: 1700000, pz: 250, konda: 40, mana: 40, zreka: 20, res_zimno: 40, wym_lvl: 65, wym_zreka: 65 })
+    new GUIItemData('biltabandury', 'Biltabandury', 6, 'Rekawice', { waga: 10, wartosc: 1700000, pz: 200, konda: 80, mana: 80, zreka: 20, res_zimno: 30, wym_lvl: 65, wym_zreka: 65 })
 
-    new GUIItemData('zemsta_ivravula', 'Zemsta Ivravula', 6, 'Amulety');
-    new GUIItemData('virral', 'Virral', 6, 'Bron');
-    new GUIItemData('urntsul', 'Urntsul', 6, 'Bron');
-    new GUIItemData('buoriany', 'Buoriany', 6, 'Bron');
-    new GUIItemData('lawina', 'Lawina', 6, 'Bron');
-    new GUIItemData('thorimmy', 'Thorimmy', 6, 'Buty');
-    new GUIItemData('ghaitarog', 'Ghaitarog', 6, 'Helmy');
-    new GUIItemData('dagorilm', 'Dagorilm', 6, 'Paski');
-    new GUIItemData('debba', 'Debba', 6, 'Peleryny');
-    new GUIItemData('biltabandury', 'Biltabandury', 6, 'Rekawice');
+    new GUIItemData('vogurun', 'Vogurun', 7, 'Amulety', { waga: 2, wartosc: 2700000, moc: 38, wiedza: 37, wym_lvl: 75, wym_moc: 75 })
+    new GUIItemData('yurugu', 'Yurugu', 7, 'Amulety', { waga: 2, wartosc: 2700000, sila: 38, zreka: 37, wym_lvl: 75, wym_sila: 75 })
+    new GUIItemData('istav', 'Istav', 7, 'Bron', { waga: 20, wartosc: 2700000, pz: 130, mana: 130, moc: 7, wiedza: 30, obr: 169, r_obr: 'obuchowe', res_uro: 20, res_zimno: 20, wym_lvl: 75, wym_wiedza: 75 })
+    new GUIItemData('wladca_losu', 'Władca Losu', 7, 'Bron', { waga: 17, wartosc: 2700000, pz: 80, konda: 50, mana: 50, moc: 37, wiedza: 20, obr: 179, r_obr: 'obuchowe', wym_lvl: 75, wym_moc: 75 })
+    new GUIItemData('fanga', 'Fanga', 7, 'Bron', { waga: 15, wartosc: 2700000, pz: 130, konda: 100, mana: 90, sila: 10, zreka: 33, obr: 179, r_obr: 'obuchowe', wym_lvl: 75, wym_zreka: 75 })
+    new GUIItemData('otwieracz', 'Otwieracz', 7, 'Bron', { waga: 24, wartosc: 2700000, pz: 260, konda: 200, mana: 20, sila: 10, zreka: 8, obr: 160, r_obr: 'sieczne', wym_lvl: 75, wym_sila: 75 })
+    new GUIItemData('gjolmar', 'Gjolmar', 7, 'Bron', { waga: 15, wartosc: 4900000, pz: 150, konda: 50, mana: 50, sila: 20, zreka: 40, obr: 196, r_obr: 'kłute', wym_lvl: 85, wym_zreka: 85 })
+    new GUIItemData('batagur', 'Batagur', 7, 'Bron', { waga: 40, wartosc: 4900000, pz: 80, konda: 200, sila: 47, zreka: 10, obr: 217, r_obr: 'obuchowe', wym_lvl: 85, wym_sila: 85 })
+    new GUIItemData('virveny', 'Virveny', 7, 'Buty', { waga: 20, wartosc: 2700000, pz: 150, konda: 150, mana: 50, sila: 7, zreka: 9, res_ogien: 15, res_klut: 36, res_obuch: 38, res_siek: 35, wym_lvl: 75, wym_zreka: 75 })
+    new GUIItemData('sigil', 'Sigil', 7, 'Helmy', { waga: 18, wartosc: 2700000, pz: 180, mana: 130, moc: 10, wiedza: 13, res_ene: 25, res_klut: 31, res_obuch: 32, res_siek: 31, wym_lvl: 75, wym_wiedza: 75 })
+    new GUIItemData('powrot_ivravula', 'Powrót Ivravula', 7, 'Peleryny', { waga: 12, wartosc: 3200000, pz: 100, konda: 120, mana: 80, sila: 14, zreka: 24, res_ene: 20, res_ogien: 20, wym_lvl: 80, wym_zreka: 80 })
+    new GUIItemData('dracorporis', 'Dracorporis', 7, 'Peleryny', { waga: 15, wartosc: 2700000, pz: 90, mana: 60, moc: 38, wiedza: 22, wym_lvl: 75, wym_moc: 75 })
+    new GUIItemData('griv', 'Griv', 7, 'Pierki', { waga: 1, wartosc: 2700000, pz: 550, konda: 100, mana: 100, wym_lvl: 75 })
+    new GUIItemData('zadry', 'Zadry', 7, 'Rekawice', { waga: 6, wartosc: 2700000, pz: 180, konda: 40, sila: 25, zreka: 28, wym_lvl: 75, wym_zreka: 75 })
+    new GUIItemData('varrvy', 'Varrvy', 7, 'Spodnie', { waga: 40, wartosc: 2700000, pz: 50, konda: 30, sila: 31, zreka: 14, res_klut: 39, res_obuch: 38, res_siek: 38, wym_lvl: 75, wym_sila: 75 })
+    new GUIItemData('nadzieja_pokolen', 'Nadzieja Pokoleń', 7, 'Zbroje', { waga: 18, wartosc: 3200000, pz: 120, konda: 10, moc: 13, wiedza: 20, res_ene: 20, res_ogien: 20, res_klut: 32, res_obuch: 35, res_siek: 33, wym_lvl: 80, wym_wiedza: 80 })
+    new GUIItemData('harttraum', 'Harttraum', 7, 'Zbroje', { waga: 45, wartosc: 2700000, pz: 120, konda: 30, sila: 16, zreka: 26, res_klut: 35, res_obuch: 35, res_siek: 35, wym_lvl: 75, wym_zreka: 75 })
 
-    new GUIItemData('vogurun', 'Vogurun', 7, 'Amulety');
-    new GUIItemData('yurugu', 'Yurugu', 7, 'Amulety');
-    new GUIItemData('istav', 'Istav', 7, 'Bron');
-    new GUIItemData('wladca_losu', 'Władca Losu', 7, 'Bron');
-    new GUIItemData('fanga', 'Fanga', 7, 'Bron');
-    new GUIItemData('otwieracz', 'Otwieracz', 7, 'Bron');
-    new GUIItemData('gjolmar', 'Gjolmar', 7, 'Bron');
-    new GUIItemData('batagur', 'Batagur', 7, 'Bron');
-    new GUIItemData('virveny', 'Virveny', 7, 'Buty');
-    new GUIItemData('sigil', 'Sigil', 7, 'Helmy');
-    new GUIItemData('powrot_ivravula', 'Powrót Ivravula', 7, 'Peleryny');
-    new GUIItemData('dracorporis', 'Dracorporis', 7, 'Peleryny');
-    new GUIItemData('griv', 'Griv', 7, 'Pierki');
-    new GUIItemData('zadry', 'Zadry', 7, 'Rekawice');
-    new GUIItemData('varrvy', 'Varrvy', 7, 'Spodnie');
-    new GUIItemData('nadzieja_pokolen', 'Nadzieja Pokoleń', 7, 'Zbroje');
-    new GUIItemData('harttraum', 'Harttraum', 7, 'Zbroje');
+    new GUIItemData('aqueniry', 'Aqueniry', 8, 'Buty', { waga: 12, wartosc: 4900000, pz: 150, mana: 20, moc: 19, wiedza: 30, res_klut: 35, res_obuch: 37, res_siek: 35, wym_lvl: 85, wym_wiedza: 85 })
+    new GUIItemData('pysk', 'Pysk', 8, 'Helmy', { waga: 19, wartosc: 6600000, pz: 180, konda: 50, sila: 26, zreka: 23, res_klut: 35, res_obuch: 35, res_siek: 35, wym_lvl: 90, wym_sila: 90 })
+    new GUIItemData('exuvium', 'Exuvium', 8, 'Paski', { waga: 12, wartosc: 6600000, pz: 350, mana: 100, moc: 5, wiedza: 40, wym_lvl: 90, wym_wiedza: 90 })
+    new GUIItemData('nurt', 'Nurt', 8, 'Paski', { waga: 13, wartosc: 4900000, pz: 200, konda: 60, mana: 20, sila: 19, zreka: 38, wym_lvl: 85, wym_zreka: 85 })
+    new GUIItemData('tsunami', 'Tsunami', 8, 'Peleryny', { waga: 16, wartosc: 4900000, pz: 250, mana: 170, moc: 8, wiedza: 35, wym_lvl: 85, wym_wiedza: 85 })
+    new GUIItemData('skogan', 'Skogan', 8, 'Pierki', { waga: 2, wartosc: 4900000, pz: 120, konda: 20, mana: 20, sila: 44, zreka: 25, wym_lvl: 85, wym_sila: 85 })
+    new GUIItemData('mauremys', 'Mauremys', 8, 'Pierki', { waga: 3, wartosc: 4900000, pz: 100, mana: 50, moc: 38, wiedza: 32, wym_lvl: 85, wym_moc: 85 })
+    new GUIItemData('pazury', 'Pazury', 8, 'Rekawice', { waga: 10, wartosc: 6600000, pz: 120, mana: 320, moc: 22, wiedza: 24, wym_lvl: 90, wym_wiedza: 90 })
+    new GUIItemData('skiilfy', 'Skiilfy', 8, 'Spodnie', { waga: 14, wartosc: 4900000, pz: 150, mana: 50, moc: 22, wiedza: 25, res_klut: 35, res_obuch: 35, res_siek: 35, wym_lvl: 85, wym_wiedza: 85 })
+    new GUIItemData('aquariusy', 'Aquariusy', 8, 'Spodnie', { waga: 32, wartosc: 4900000, pz: 250, konda: 80, sila: 8, zreka: 25, res_klut: 36, res_obuch: 36, res_siek: 36, wym_lvl: 85, wym_zreka: 85 })
+    new GUIItemData('karapaks', 'Karapaks', 8, 'Tarcze Karwasze', { waga: 35, wartosc: 4900000, pz: 200, konda: 200, mana: 10, sila: 9, zreka: 11, res_klut: 40, res_obuch: 40, res_siek: 40, wym_klasa: 'rycerz', wym_lvl: 85, wym_zreka: 85 })
+    new GUIItemData('dmorlung', 'Dmorlung', 8, 'Zbroje', { waga: 20, wartosc: 8300000, pz: 200, konda: 100, sila: 19, zreka: 18, res_zimno: 15, res_klut: 38, res_obuch: 38, res_siek: 38, wym_lvl: 95, wym_sila: 95 })
+    new GUIItemData('vorleah', 'Vorleah', 8, 'Zbroje', { waga: 20, wartosc: 8300000, pz: 200, konda: 20, mana: 100, moc: 16, wiedza: 25, res_zimno: 15, res_klut: 35, res_obuch: 35, res_siek: 35, wym_lvl: 95, wym_wiedza: 95 })
 
-    new GUIItemData('aqueniry', 'Aqueniry', 8, 'Buty');
-    new GUIItemData('pysk', 'Pysk', 8, 'Helmy');
-    new GUIItemData('exuvium', 'Exuvium', 8, 'Paski');
-    new GUIItemData('nurt', 'Nurt', 8, 'Paski');
-    new GUIItemData('tsunami', 'Tsunami', 8, 'Peleryny');
-    new GUIItemData('skogan', 'Skogan', 8, 'Pierki');
-    new GUIItemData('mauremys', 'Mauremys', 8, 'Pierki');
-    new GUIItemData('pazury', 'Pazury', 8, 'Rekawice');
-    new GUIItemData('skiilfy', 'Skiilfy', 8, 'Spodnie');
-    new GUIItemData('aquariusy', 'Aquariusy', 8, 'Spodnie');
-    new GUIItemData('karapaks', 'Karapaks', 8, 'Tarcze Karwasze');
-    new GUIItemData('dmorlung', 'Dmorlung', 8, 'Zbroje');
-    new GUIItemData('vorleah', 'Vorleah', 8, 'Zbroje');
+    new GUIItemData('htagan', 'Htagan', 9, 'Helmy', { waga: 18, wartosc: 10000000, pz: 250, mana: 50, moc: 25, wiedza: 24, res_uro: 10, res_klut: 35, res_obuch: 35, res_siek: 35, wym_lvl: 100, wym_moc: 100 })
+    new GUIItemData('angwallion', 'Angwallion', 9, 'Peleryny', { waga: 24, wartosc: 10000000, pz: 200, konda: 100, mana: 100, sila: 12, zreka: 30, res_ene: 15, res_ogien: 15, res_uro: 15, res_zimno: 15, wym_lvl: 100, wym_zreka: 100 })
 
-    new GUIItemData('htagan', 'Htagan', 9, 'Helmy');
-    new GUIItemData('angwallion', 'Angwallion', 9, 'Peleryny');
+    new GUIItemData('serce_seleny', 'Serce Seleny', 10, 'Amulety', { waga: 3, wartosc: 22500000, pz: 350, konda: 100, mana: 100, res_ene: 55, res_ogien: 55, res_uro: 55, res_zimno: 55, wym_lvl: 110 })
+    new GUIItemData('mallus_selenorum', 'Mallus Selenorum', 10, 'Bron', { waga: 40, wartosc: 22500000, pz: 400, konda: 250, mana: 100, sila: 26, zreka: 20, obr: 211, r_obr: 'sieczne', wym_lvl: 110, wym_sila: 110 })
+    new GUIItemData('szpony', 'Szpony', 10, 'Bron', { waga: 10, wartosc: 22500000, pz: 250, konda: 90, mana: 200, sila: 19, zreka: 48, obr: 239, r_obr: 'sieczne', wym_lvl: 110, wym_zreka: 110 })
+    new GUIItemData('taehal', 'Taehal', 10, 'Bron', { waga: 15, wartosc: 22500000, pz: 300, konda: 130, mana: 90, sila: 18, zreka: 51, obr: 239, r_obr: 'kłute', wym_lvl: 110, wym_zreka: 110 })
+    new GUIItemData('bol', 'Ból', 10, 'Bron', { waga: 5, wartosc: 22500000, pz: 400, konda: 50, mana: 150, moc: 21, wiedza: 40, obr: 239, r_obr: 'kłute', wym_lvl: 110, wym_wiedza: 110 })
+    new GUIItemData('ciern', 'Cierń', 10, 'Bron', { waga: 30, wartosc: 22500000, pz: 250, konda: 160, sila: 50, zreka: 30, obr: 266, r_obr: 'sieczne', wym_lvl: 110, wym_sila: 110 })
+    new GUIItemData('trojzab_admiralski', 'Trójząb Admiralski', 10, 'Bron', { waga: 18, wartosc: 22500000, pz: 140, konda: 30, mana: 50, moc: 65, wiedza: 34, obr: 239, r_obr: 'obuchowe', wym_lvl: 110, wym_moc: 110 })
+    new GUIItemData('alendry', 'Alendry', 10, 'Buty', { waga: 16, wartosc: 22500000, pz: 200, mana: 40, moc: 16, wiedza: 43, res_ene: 15, res_ogien: 15, res_uro: 15, res_zimno: 15, res_klut: 37, res_obuch: 37, res_siek: 37, wym_lvl: 110, wym_wiedza: 110 })
+    new GUIItemData('cierpietniki', 'Cierpiętniki', 10, 'Buty', { waga: 19, wartosc: 22500000, pz: 120, konda: 50, sila: 49, zreka: 31, res_klut: 40, res_obuch: 40, res_siek: 40, wym_lvl: 110, wym_sila: 110 })
+    new GUIItemData('envile', 'Envile', 10, 'Buty', { waga: 17, wartosc: 22500000, pz: 140, mana: 60, moc: 50, wiedza: 39, res_klut: 30, res_obuch: 30, res_siek: 30, wym_lvl: 110, wym_moc: 110 })
+    new GUIItemData('pamiec_morany', 'Pamięć Morany', 10, 'Helmy', { waga: 15, wartosc: 35000000, pz: 300, konda: 120, sila: 29, zreka: 25, res_ene: 15, res_ogien: 15, res_uro: 15, res_zimno: 15, res_klut: 45, res_obuch: 45, res_siek: 45, wym_lvl: 120, wym_sila: 120 })
+    new GUIItemData('milosc_morany', 'Miłość Morany', 10, 'Helmy', { waga: 15, wartosc: 35000000, pz: 340, mana: 100, moc: 27, wiedza: 25, res_ene: 20, res_ogien: 20, res_uro: 20, res_zimno: 20, res_klut: 40, res_obuch: 40, res_siek: 40, wym_lvl: 120, wym_moc: 120 })
+    new GUIItemData('groza_seleny', 'Groza Seleny', 10, 'Paski', { waga: 3, wartosc: 22500000, pz: 230, konda: 70, mana: 20, sila: 16, zreka: 55, res_ene: 15, res_ogien: 15, res_uro: 15, res_zimno: 15, wym_lvl: 110, wym_zreka: 110 })
+    new GUIItemData('nienawisc_draugula', 'Nienawiść Draugula', 10, 'Paski', { waga: 8, wartosc: 22500000, pz: 120, konda: 40, sila: 63, zreka: 42, wym_lvl: 110, wym_sila: 110 })
+    new GUIItemData('objecia_morany', 'Objęcia Morany', 10, 'Paski', { waga: 7, wartosc: 28750000, pz: 280, konda: 20, mana: 80, moc: 40, wiedza: 45, res_uro: 10, res_zimno: 20, wym_lvl: 115, wym_wiedza: 115 })
+    new GUIItemData('hanba_seleny', 'Hańba Seleny', 10, 'Peleryny', { waga: 14, wartosc: 22500000, pz: 280, mana: 180, moc: 17, wiedza: 40, res_ene: 15, res_ogien: 15, res_uro: 15, res_zimno: 15, wym_lvl: 110, wym_wiedza: 110 })
+    new GUIItemData('admiralski_gronostaj', 'Admiralski Gronostaj', 10, 'Peleryny', { waga: 15, wartosc: 28750000, pz: 300, konda: 140, mana: 80, sila: 35, zreka: 45, wym_lvl: 115, wym_zreka: 115 })
+    new GUIItemData('zaglada_ludow', 'Zagłada Ludów', 10, 'Pierki', { waga: 2, wartosc: 22500000, pz: 140, konda: 60, mana: 40, sila: 50, zreka: 50, wym_lvl: 110, wym_sila: 110 })
+    new GUIItemData('przysiega_draugula', 'Przysięga Draugula', 10, 'Pierki', { waga: 2, wartosc: 22500000, pz: 110, konda: 40, mana: 60, moc: 50, wiedza: 50, wym_lvl: 110, wym_moc: 110 })
+    new GUIItemData('szpony_seimhi', 'Szpony Seimhi', 10, 'Rekawice', { waga: 12, wartosc: 28750000, pz: 300, konda: 50, mana: 240, moc: 28, wiedza: 45, wym_lvl: 115, wym_wiedza: 115 })
+    new GUIItemData('aeterus_passio', 'Aeterus Passio', 10, 'Rekawice', { waga: 18, wartosc: 28750000, pz: 300, konda: 60, mana: 20, sila: 40, zreka: 45, res_uro: 10, res_zimno: 20, wym_lvl: 115, wym_zreka: 115 })
+    new GUIItemData('erbaile', 'Erbaile', 10, 'Spodnie', { waga: 21, wartosc: 22500000, pz: 220, konda: 130, sila: 11, zreka: 33, res_ene: 15, res_ogien: 15, res_uro: 15, res_zimno: 15, res_klut: 40, res_obuch: 40, res_siek: 40, wym_lvl: 110, wym_zreka: 110 })
+    new GUIItemData('udreki', 'Udręki', 10, 'Spodnie', { waga: 15, wartosc: 22500000, pz: 80, mana: 100, moc: 44, wiedza: 36, res_klut: 39, res_obuch: 39, res_siek: 39, wym_lvl: 110, wym_moc: 110 })
+    new GUIItemData('kil', 'Kil', 10, 'Tarcze Karwasze', { waga: 35, wartosc: 22500000, pz: 280, konda: 150, mana: 80, sila: 20, zreka: 26, res_klut: 40, res_obuch: 40, res_siek: 40, wym_klasa: 'rycerz', wym_lvl: 110, wym_zreka: 110 })
+    new GUIItemData('undurisy', 'Undurisy', 10, 'Tarcze Karwasze', { waga: 5, wartosc: 22500000, pz: 90, konda: 120, mana: 40, sila: 53, zreka: 43, wym_lvl: 110, wym_sila: 110 })
+    new GUIItemData('ariarchy', 'Ariarchy', 10, 'Tarcze Karwasze', { waga: 5, wartosc: 22500000, pz: 80, konda: 50, mana: 200, moc: 45, wiedza: 43, wym_lvl: 110, wym_moc: 110 })
+    new GUIItemData('takerony', 'Takerony', 10, 'Tarcze Karwasze', { waga: 5, wartosc: 22500000, pz: 700, konda: 110, mana: 50, sila: 10, zreka: 25, wym_lvl: 110, wym_zreka: 110 })
+    new GUIItemData('inavoxy', 'Inavoxy', 10, 'Tarcze Karwasze', { waga: 5, wartosc: 22500000, pz: 700, konda: 50, mana: 110, moc: 10, wiedza: 25, wym_lvl: 110, wym_wiedza: 110 })
 
-    new GUIItemData('serce_seleny', 'Serce Seleny', 10, 'Amulety');
-    new GUIItemData('mallus_selenorum', 'Mallus Selenorum', 10, 'Bron');
-    new GUIItemData('szpony', 'Szpony', 10, 'Bron');
-    new GUIItemData('taehal', 'Taehal', 10, 'Bron');
-    new GUIItemData('bol', 'Ból', 10, 'Bron');
-    new GUIItemData('ciern', 'Cierń', 10, 'Bron');
-    new GUIItemData('trojzab_admiralski', 'Trójząb Admiralski', 10, 'Bron');
-    new GUIItemData('alendry', 'Alendry', 10, 'Buty');
-    new GUIItemData('cierpietniki', 'Cierpiętniki', 10, 'Buty');
-    new GUIItemData('envile', 'Envile', 10, 'Buty');
-    new GUIItemData('pamiec_morany', 'Pamięć Morany', 10, 'Helmy');
-    new GUIItemData('milosc_morany', 'Miłość Morany', 10, 'Helmy');
-    new GUIItemData('groza_seleny', 'Groza Seleny', 10, 'Paski');
-    new GUIItemData('nienawisc_draugula', 'Nienawiść Draugula', 10, 'Paski');
-    new GUIItemData('objecia_morany', 'Objęcia Morany', 10, 'Paski');
-    new GUIItemData('hanba_seleny', 'Hańba Seleny', 10, 'Peleryny');
-    new GUIItemData('admiralski_gronostaj', 'Admiralski Gronostaj', 10, 'Peleryny');
-    new GUIItemData('zaglada_ludow', 'Zagłada Ludów', 10, 'Pierki');
-    new GUIItemData('przysiega_draugula', 'Przysięga Draugula', 10, 'Pierki');
-    new GUIItemData('szpony_seimhi', 'Szpony Seimhi', 10, 'Rekawice');
-    new GUIItemData('aeterus_passio', 'Aeterus Passio', 10, 'Rekawice');
-    new GUIItemData('erbaile', 'Erbaile', 10, 'Spodnie');
-    new GUIItemData('udreki', 'Udręki', 10, 'Spodnie');
-    new GUIItemData('kil', 'Kil', 10, 'Tarcze Karwasze');
-    new GUIItemData('undurisy', 'Undurisy', 10, 'Tarcze Karwasze');
-    new GUIItemData('ariarchy', 'Ariarchy', 10, 'Tarcze Karwasze');
-    new GUIItemData('takerony', 'Takerony', 10, 'Tarcze Karwasze');
-    new GUIItemData('inavoxy', 'Inavoxy', 10, 'Tarcze Karwasze');
+    new GUIItemData('ortasis', 'Ortasis', 11, 'Amulety', { waga: 2, wartosc: 50750000, pz: 310, konda: 30, mana: 170, moc: 40, wiedza: 58, res_ene: 30, res_ogien: 10, wym_lvl: 127, wym_wiedza: 125 })
+    new GUIItemData('dorbis', 'Dorbis', 11, 'Amulety', { waga: 2, wartosc: 50750000, pz: 310, konda: 170, mana: 30, sila: 45, zreka: 53, res_ene: 30, res_ogien: 10, wym_lvl: 127, wym_zreka: 125 })
+    new GUIItemData('arhauty', 'Arhauty', 11, 'Buty', { waga: 21, wartosc: 50750000, pz: 750, konda: 70, zreka: 25, res_ene: 15, res_ogien: 15, res_uro: 15, res_zimno: 15, res_klut: 50, res_obuch: 50, res_siek: 50, wym_lvl: 127, wym_sila: 50, wym_zreka: 50 })
+    new GUIItemData('cien_tarula', 'Cień Tarula', 11, 'Peleryny', { waga: 8, wartosc: 57500000, pz: 120, konda: 20, mana: 150, moc: 68, wiedza: 63, res_ene: 15, res_ogien: 15, wym_lvl: 130, wym_moc: 130 })
+    new GUIItemData('temary', 'Temary', 11, 'Spodnie', { waga: 19, wartosc: 50750000, pz: 750, mana: 70, wiedza: 25, res_ene: 20, res_ogien: 20, res_uro: 20, res_zimno: 20, res_klut: 45, res_obuch: 45, res_siek: 45, wym_lvl: 127, wym_moc: 50, wym_wiedza: 50 })
+    new GUIItemData('ziraki', 'Ziraki', 11, 'Spodnie', { waga: 17, wartosc: 57500000, pz: 140, konda: 60, sila: 63, zreka: 55, res_ene: 15, res_ogien: 15, res_klut: 38, res_obuch: 38, res_siek: 38, wym_lvl: 130, wym_sila: 130 })
 
-    new GUIItemData('ortasis', 'Ortasis', 11, 'Amulety');
-    new GUIItemData('dorbis', 'Dorbis', 11, 'Amulety');
-    new GUIItemData('arhauty', 'Arhauty', 11, 'Buty');
-    new GUIItemData('cien_tarula', 'Cień Tarula', 11, 'Peleryny');
-    new GUIItemData('temary', 'Temary', 11, 'Spodnie');
-    new GUIItemData('ziraki', 'Ziraki', 11, 'Spodnie');
+    new GUIItemData('salmurn', 'Salmurn', 12, 'Zbroje', { waga: 25, wartosc: 68750000, pz: 400, konda: 100, mana: 80, sila: 22, zreka: 48, res_ene: 15, res_ogien: 15, res_uro: 15, res_zimno: 15, res_klut: 50, res_obuch: 50, res_siek: 50, wym_lvl: 135, wym_sila: 50, wym_zreka: 50 })
+    new GUIItemData('zalla', 'Zalla', 12, 'Zbroje', { waga: 22, wartosc: 68750000, pz: 400, konda: 50, mana: 130, moc: 24, wiedza: 46, res_ene: 20, res_ogien: 20, res_uro: 20, res_zimno: 20, res_klut: 45, res_obuch: 45, res_siek: 45, wym_lvl: 135, wym_moc: 50, wym_wiedza: 50 })
 
-    new GUIItemData('salmurn', 'Salmurn', 12, 'Zbroje');
-    new GUIItemData('zalla', 'Zalla', 12, 'Zbroje');
-    new GUIItemData('dar_skrzydlatej', 'Dar Skrzydlatej', 12, 'Pierki');
-    new GUIItemData('remigesy', 'Remigesy ', 12, 'Rekawice');
-    new GUIItemData('wyrok_hellara', 'Wyrok Hellara', 12, 'Paski');
-    new GUIItemData('vengur', 'Vengur', 12, 'Peleryny');
-    new GUIItemData('voglery', 'Voglery ', 12, 'Rekawice');
+    new GUIItemData('dar_skrzydlatej', 'Dar Skrzydlatej', 12, 'Pierki', { waga: 0, wartosc: 0, wym_lvl: 0 })
+    new GUIItemData('remigesy', 'Remigesy', 12, 'Rekawice', { waga: 0, wartosc: 0, wym_lvl: 0 })
+    new GUIItemData('wyrok_hellara', 'Wyrok Hellara', 12, 'Paski', { waga: 0, wartosc: 0, wym_lvl: 0 })
+    new GUIItemData('vengur', 'Vengur', 12, 'Peleryny', { waga: 0, wartosc: 0, wym_lvl: 0 })
+    new GUIItemData('voglery', 'Voglery', 12, 'Rekawice', { waga: 0, wartosc: 0, wym_lvl: 0 })
 
-    new GUIItemData('allenor', 'Allenor', 9, 'Bron', true);
-    new GUIItemData('attawa', 'Attawa', 9, 'Bron', true);
-    new GUIItemData('gorthdar', 'Gorthdar', 9, 'Bron', true);
-    new GUIItemData('imisindo', 'Imisindo', 9, 'Bron', true);
-    new GUIItemData('latarnia_zycia', 'Latarnia Życia', 9, 'Bron', true);
-    new GUIItemData('washi', 'Washi', 9, 'Bron', true);
-    new GUIItemData('zmij', 'Żmij', 9, 'Bron', true);
+
+    new GUIItemData('allenor', 'Allenor', 9, 'Bron', {}, true);
+    new GUIItemData('attawa', 'Attawa', 9, 'Bron', {}, true);
+    new GUIItemData('gorthdar', 'Gorthdar', 9, 'Bron', {}, true);
+    new GUIItemData('imisindo', 'Imisindo', 9, 'Bron', {}, true);
+    new GUIItemData('latarnia_zycia', 'Latarnia Życia', 9, 'Bron', {}, true);
+    new GUIItemData('washi', 'Washi', 9, 'Bron', {}, true);
+    new GUIItemData('zmij', 'Żmij', 9, 'Bron', {}, true);
 }
 
 

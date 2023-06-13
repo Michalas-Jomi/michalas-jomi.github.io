@@ -82,8 +82,8 @@ function calculate() {
             </tr>
             <tr>
                 <th>Ranga</th>
-                <th>z inhb</th>
                 <th>bez inhb</th>
+                <th>z inhb</th>
             </tr>
         </thead>
         <tbody>`
@@ -95,8 +95,8 @@ function calculate() {
         html += `
         <tr>
             <td>${romanize(i+1)}</td>
-            <td>${Math.round(z) / 10}k</td>
             <td>${Math.round(bez*5 / 3) / 10}k</td>
+            <td>${Math.round(z) / 10}k</td>
         </tr>`
     }
 
@@ -117,11 +117,11 @@ function calculate() {
     <tbody>
         <tr>
             <td>Garni</td>
-            <td>${Math.round((cena + 55) / 3, 2)}k</td>
+            <td>${Math.round((cena + 55) / 3 * 10) / 10}k</td>
         </tr>
         <tr>
             <td>Łowca</td>
-            <td>${Math.round((cena + 50) / 3, 2)}k</td>
+            <td>${Math.round((cena + 50) / 3 * 10) / 10}k</td>
         </tr>
     </tbody>
     </table>`
