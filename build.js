@@ -1006,11 +1006,13 @@ class GUIConf {
 
                 html += `<h3>Slot ${i+1}: ${text} </h3>`
             }
+            html += '<div style="display: none;">'
             for (let i of data.getStatsUp())
                 html += `<h4>${GUIItemData.statName(i)}: ${GUIConf.editItem.getStat(i)}</h4>`
             html += '</br>'
             for (let i of data.getStats())
                 html += `<h4>${GUIItemData.statName(i)}: ${GUIConf.editItem.getStat(i)}</h4>`
+            html += '</div>'
 
         } else if (GUIConf.editDriff != null) {
             let driff = GUIConf.editDriff.driff

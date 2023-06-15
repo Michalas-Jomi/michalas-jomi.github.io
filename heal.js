@@ -20,16 +20,18 @@ function heal() {
         let roz = parseInt(inpRoz.value)
         let pswc = parseInt(inpPswc.value)
 
-        let fabric = x => `<tr>
-        <td>Target</td>
-        <td>${Math.ceil(base * x * ((mod) / 200 + 1))}</td>
-        <td>${Math.ceil(base * x * ((mod + roz) / 200 + 1))}</td>
-        <td>${Math.ceil(base * x * ((mod + pswc) / 200 + 1))}</td>
-        <td>${Math.ceil(base * x * ((mod + roz + pswc) / 200 + 1))}</td>
-    <tr>`
+        let pre = (name, ...args) => args.reduce((a, b) => a + b, 0) / 200 + 1
+        let fabric = x => `
+        <tr>
+            <td>${name}</td>
+            <td>${Math.ceil(base * x * pre(mod))}</td>
+            <td>${Math.ceil(base * x * pre(mod + roz))}</td>
+            <td>${Math.ceil(base * x * pre(mod + pswc))}</td>
+            <td>${Math.ceil(base * x * pre(mod + roz + pswc))}</td>
+        <tr>`
 
 
-        out.innerHTML = fabric(trg) + fabric(grp)
+        out.innerHTML = fabric('Target', trg) + fabric('Grupa', grp)
     }
 
     [inpMoc, inpWiedza, inpMod, inpTarget, inpGrp, inpRoz, inpPswc].forEach(inp => inp.onchange = recalculate)
