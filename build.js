@@ -163,6 +163,9 @@ class Build {
      * @returns {Boolean} powodzenie
      */
     static load(str) {
+        if (str.indexOf('?') != -1)
+            str = str.slice(str.indexOf('?') + 1)
+
         try {
             if (str[0] == 'e') {
                 Build.loadOld(str)
@@ -677,6 +680,10 @@ class GUI {
         GUIConf.init()
 
         GUI._makeEpiks()
+
+
+        if (window.location.search != '')
+            Build.load(window.location.search.slice(1))
     }
     static _makeEpiks() {
         let fabric = (name, mod) => {
@@ -821,6 +828,8 @@ class GUIConf {
             console.log('zapisywanie buildu')
 
             let data = Build.save()
+
+            data = window.location.origin + window.location.pathname + '?' + data
 
             Info.copy(data)
         }
