@@ -20,8 +20,8 @@ function heal() {
         let roz = parseInt(inpRoz.value)
         let pswc = parseInt(inpPswc.value)
 
-        let pre = (name, ...args) => args.reduce((a, b) => a + b, 0) / 200 + 1
-        let fabric = x => `
+        let pre = (...args) => args.reduce((a, b) => a + b, 0) / 200 + 1
+        let fabric = (name, x) => `
         <tr>
             <td>${name}</td>
             <td>${Math.ceil(base * x * pre(mod))}</td>

@@ -1854,7 +1854,7 @@ function initData() {
     new DriffData('amad', 'Zużycie kondycji', 1, 2, 60, 'Specjalny')
     new DriffData('ann', 'Regeneracja many', .15, 2, 80, 'Specjalny')
     new DriffData('eras', 'Regeneracja kondycjii', .15, 2, 80, 'Specjalny')
-    new DriffData('dur', 'Podwójne losowanie trafienia', 1, 2, 60, 'Celnosci')
+    new DriffData('dur', 'Podwójne losowanie trafienia', .5, 2, 60, 'Celnosci')
     new DriffData('elen', 'Podwójne losowanie obrony', 1, 2, NaN, 'Obrony')
     new DriffData('lorb', 'Przełamanie odporności na urok', 1, 2, 60, 'Celnosci')
     new DriffData('grod', 'Odporność na trafienie krytyczne', .5, 2, 60, 'Obrony')
