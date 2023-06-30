@@ -43,6 +43,16 @@ function calculate() {
         ] // Odłamki sety
     let inh = [3, 4, 4, 5, 6, 6, 7, 8, 8, 10, 12, 12]
 
+    let display = x => {
+        x = Math.round(x * 10) / 10
+        let le = x.toString().length
+        if (le < 4)
+            return x.toString() + 'k'
+        if (le <= 5 && x.toString().indexOf('.') != -1)
+            return x.toString() + 'k'
+
+        return display(x / 1000) + 'k'
+    }
 
     // Przetapianie
     if (ranga == 0) {
@@ -55,8 +65,8 @@ function calculate() {
 
             html += `<tr>
             <td><span class='lp'>${romanize(lp)}</span></td>
-            <td><span class='c1'>${c1}k</span></td>
-            <td><span class='c2'>${c2}k</span></td>
+            <td><span class='c1'>${display(c1)}</span></td>
+            <td><span class='c2'>${display(c2)}</span></td>
             </tr>`
         }
     } else {
@@ -68,8 +78,8 @@ function calculate() {
 
         html += `<tr>
         <td><span class='lp'>${romanize(ranga)}</span></td>
-        <td><span class='c1'>${c1}k</span></td>
-        <td><span class='c2'>${c2}k</span></td>
+        <td><span class='c1'>${display(c1)}</span></td>
+        <td><span class='c2'>${display(c2)}</span></td>
         </tr>`
     }
 
@@ -111,8 +121,8 @@ function calculate() {
         html += `
         <tr>
             <td>${romanize(i+1)}</td>
-            <td>${Math.round(bez*5 / 3) / 10}k</td>
-            <td>${Math.round(z) / 10}k</td>
+            <td>${display(Math.round(bez*5 / 3) / 10)}</td>
+            <td>${display(Math.round(z) / 10)}</td>
         </tr>`
     }
 
@@ -133,11 +143,11 @@ function calculate() {
     <tbody>
         <tr>
             <td>Garni</td>
-            <td>${Math.round((eska + 55) / 3 * 10) / 10}k</td>
+            <td>${display(Math.round((eska + 55) / 3 * 10) / 10)}</td>
         </tr>
         <tr>
             <td>Łowca</td>
-            <td>${Math.round((eska + 50) / 3 * 10) / 10}k</td>
+            <td>${display(Math.round((eska + 50) / 3 * 10) / 10)}</td>
         </tr>
     </tbody>
     </table>`
@@ -169,8 +179,8 @@ function calculate() {
         for (let i = 0; i < 4; i++) {
             let x = ileOR[i][gw]
             let base = -Math.pow(5, parseInt(gw / 3)) * (i + 1) - 20
-            html += `<td ${i % 2 == 1 ? '' : 'class="eskitd2"'}>${x * odlm + base}k</td>
-                     <td ${i % 2 == 1 ? '' : 'class="eskitd2"'}>${Math.ceil(x * 1.3) * odlm + base - pl*inh[[2, 5, 8, 11][i]]}k</td>`
+            html += `<td ${i % 2 == 1 ? '' : 'class="eskitd2"'}>${display(x * odlm + base)}</td>
+                     <td ${i % 2 == 1 ? '' : 'class="eskitd2"'}>${display(Math.ceil(x * 1.3) * odlm + base - pl*inh[[2, 5, 8, 11][i]])}</td>`
         }
         html += '</tr>'
     }
@@ -200,8 +210,8 @@ function calculate() {
         for (let i = 0; i < 3; i++) {
             let x = ileOS[i][gw]
             let base = -Math.pow(5, parseInt(gw / 3)) * (i + 1) - 20
-            html += `<td ${i % 2 == 1 ? '' : 'class="eskitd2"'}>${x * odlm + base}k</td>
-                     <td ${i % 2 == 1 ? '' : 'class="eskitd2"'}>${Math.ceil(x * 1.3) * odlm + base - pl*inh[[2, 5, 8, 11][i]]}k</td>`
+            html += `<td ${i % 2 == 1 ? '' : 'class="eskitd2"'}>${display(x * odlm + base)}</td>
+                     <td ${i % 2 == 1 ? '' : 'class="eskitd2"'}>${display(Math.ceil(x * 1.3) * odlm + base - pl*inh[[2, 5, 8, 11][i]])}</td>`
         }
         html += '</tr>'
     }
