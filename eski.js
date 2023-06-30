@@ -18,24 +18,40 @@ let labels = div.children[0].children
 let canvas = div.children[1]
 
 function calculate() {
-    let cena = parseFloat(labels[0].children[0].value)
-    let pl = parseInt(labels[1].children[0].value)
-    let ranga = parseInt(labels[2].children[0].value)
+    let eska = parseFloat(labels[0].children[0].value)
+    let odlm = parseFloat(labels[1].children[0].value)
+    let pl = parseFloat(labels[2].children[0].value)
+    let ranga = parseInt(labels[3].children[0].value)
 
     let c1, c2
 
     let html = ''
 
 
-    let ile = [2, 5, 12, 24, 32, 40, 55, 70, 85, 115, 145, 175]
+    // eski kolor gwiazdek -> 5 ^ kolor(0-3) * kat(1-4) 
+    let ileE = [2, 5, 12, 24, 32, 40, 55, 70, 85, 115, 145, 175] // Eski
+    let ileOR = [
+            [3, 5, 8, 12, 20, 30, 50, 100, 250],
+            [15, 25, 40, 60, 100, 150, 250, 500, 1250],
+            [75, 125, 200, 300, 500, 750, 1250, 2500, 6500],
+            [350, 650, 1000, 1500, 2500, 4000, 6500, 12500, 30000],
+        ] // Odłamki rary
+    let ileOS = [
+            [5, 8, 12, 18, 30, 45, 75, 150, 375],
+            [25, 40, 60, 100, 150, 250, 400, 750, 2000],
+            [125, 200, 300, 450, 750, 1100, 2000, 4000, 10000],
+        ] // Odłamki sety
     let inh = [3, 4, 4, 5, 6, 6, 7, 8, 8, 10, 12, 12]
+
+
+    // Przetapianie
     if (ranga == 0) {
         for (lp = 1; lp < 13; lp++) {
-            ct = ile[lp - 1]
+            ct = ileE[lp - 1]
             ih = inh[lp - 1]
 
-            c1 = ct * cena - 20
-            c2 = Math.ceil(ct * 1.3) * cena - 20 - ih * pl
+            c1 = ct * eska - 20
+            c2 = Math.ceil(ct * 1.3) * eska - 20 - ih * pl
 
             html += `<tr>
             <td><span class='lp'>${romanize(lp)}</span></td>
@@ -44,11 +60,11 @@ function calculate() {
             </tr>`
         }
     } else {
-        ile = ile[ranga - 1]
+        ileE = ileE[ranga - 1]
         inh = inh[ranga - 1]
 
-        c1 = Math.round((cena + 20) / ile, 2)
-        c2 = Math.round((cena + 20 + inh * pl) / Math.ceil(ile * 1.3), 2)
+        c1 = Math.round((eska + 20) / ile, 2)
+        c2 = Math.round((eska + 20 + inh * pl) / Math.ceil(ile * 1.3), 2)
 
         html += `<tr>
         <td><span class='lp'>${romanize(ranga)}</span></td>
@@ -57,7 +73,6 @@ function calculate() {
         </tr>`
     }
 
-    // przetapianie
     html = `<table>
     <thead>
         <tr>
@@ -72,6 +87,7 @@ function calculate() {
     <tbody>${html}</tbody>
     </table>`
 
+    html += '</tbody></table>'
 
     // Ładowanie
     html += `
@@ -89,7 +105,7 @@ function calculate() {
         <tbody>`
 
     for (let i = 0; i < 12; i++) {
-        let bez = 20 + Math.max(1, i) * cena
+        let bez = 20 + Math.max(1, i) * eska
         let z = bez + inh[i] * pl
 
         html += `
@@ -117,15 +133,82 @@ function calculate() {
     <tbody>
         <tr>
             <td>Garni</td>
-            <td>${Math.round((cena + 55) / 3 * 10) / 10}k</td>
+            <td>${Math.round((eska + 55) / 3 * 10) / 10}k</td>
         </tr>
         <tr>
             <td>Łowca</td>
-            <td>${Math.round((cena + 50) / 3 * 10) / 10}k</td>
+            <td>${Math.round((eska + 50) / 3 * 10) / 10}k</td>
         </tr>
     </tbody>
     </table>`
 
+
+    // Rozbijanie Rary
+    html += `<table><thead>
+        <tr>
+            <th colspan=9>Rozbijanie Rary</th>
+        </tr>
+        <tr>
+            <th></th>
+            <th colspan=2 class="eskitd2">II - III</th>
+            <th colspan=2>IV - VI</th>
+            <th colspan=2 class="eskitd2">VII - IX</th>
+            <th colspan=2>X - XII</th>
+        </tr>
+        <tr>
+            <th></th>
+            <th class="eskitd2">bez</th> <th class="eskitd2">z inhb</th>
+            <th>bez</th> <th>z inhb</th>
+            <th class="eskitd2">bez</th> <th class="eskitd2">z inhb</th>
+            <th>bez</th> <th>z inhb</th>
+        </tr>
+    </thead><tbody>`
+
+    for (let gw = 0; gw < 9; gw++) {
+        html += `<tr><td>${gw}</td>`
+        for (let i = 0; i < 4; i++) {
+            let x = ileOR[i][gw]
+            let base = -Math.pow(5, parseInt(gw / 3)) * (i + 1) - 20
+            html += `<td ${i % 2 == 1 ? '' : 'class="eskitd2"'}>${x * odlm + base}k</td>
+                     <td ${i % 2 == 1 ? '' : 'class="eskitd2"'}>${Math.ceil(x * 1.3) * odlm + base - pl*inh[[2, 5, 8, 11][i]]}k</td>`
+        }
+        html += '</tr>'
+    }
+    html += '</tbody></table>'
+
+    // Rozbijanie Sety
+    html += `<table><thead>
+        <tr>
+            <th colspan=9>Rozbijanie Sety</th>
+        </tr>
+        <tr>
+            <th></th>
+            <th colspan=2 class="eskitd2">II - III</th>
+            <th colspan=2>IV - V</th>
+            <th colspan=2 class="eskitd2">IX</th>
+        </tr>
+        <tr>
+            <th></th>
+            <th class="eskitd2">bez</th> <th class="eskitd2">z inhb</th>
+            <th>bez</th> <th>z inhb</th>
+            <th class="eskitd2">bez</th> <th class="eskitd2">z inhb</th>
+        </tr>
+    </thead><tbody>`
+
+    for (let gw = 0; gw < 9; gw++) {
+        html += `<tr><td>${gw+1}*</td>`
+        for (let i = 0; i < 3; i++) {
+            let x = ileOS[i][gw]
+            let base = -Math.pow(5, parseInt(gw / 3)) * (i + 1) - 20
+            html += `<td ${i % 2 == 1 ? '' : 'class="eskitd2"'}>${x * odlm + base}k</td>
+                     <td ${i % 2 == 1 ? '' : 'class="eskitd2"'}>${Math.ceil(x * 1.3) * odlm + base - pl*inh[[2, 5, 8, 11][i]]}k</td>`
+        }
+        html += '</tr>'
+    }
+    html += '</tbody></table>'
+
+
+    // center
     html = `<center>${html}</center><div style='clear: both;'></div>`
 
 
