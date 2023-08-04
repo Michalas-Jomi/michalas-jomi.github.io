@@ -1833,7 +1833,7 @@ class GUIItemData {
 function initData() {
     new DriffData('band', 'Szansa na trafienie krytyczne', .5, 4, 60, 'Obrazen')
     new DriffData('teld', 'Szansa na podwójny atak', .5, 4, 60, 'Obrazen')
-    new DriffData('alorn', 'Redukcja obrażeń', .5, 4, NaN, 'Redukcji')
+    new DriffData('alorn', 'Redukcja obrażeń', .5, 4, 40, 'Redukcji')
     new DriffData('farid', 'Szansa na unik', .5, 4, 60, 'Redukcji')
     new DriffData('Err', 'Wyssanie many', .5, 1, NaN, 'Specjalny') // z kolorem zgaduje
 

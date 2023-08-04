@@ -72,14 +72,18 @@
             margin-top: 40px;
         }
         
-        #heal #healOutputTable tr>* {
+        #heal .healOutputTable tr:hover {
+            background-color: rgb(72, 107, 75);
+        }
+        
+        #heal .healOutputTable tr>* {
             border: 1px black solid;
             text-align: center;
             font-size: 1.2em;
             padding: 5px 20px;
         }
         
-        #heal #healOutputTable {
+        #heal .healOutputTable {
             border: 3px black solid;
         }
     </style>
@@ -171,6 +175,7 @@
 
                 <center>
 
+                    <!-- Input -->
                     <div>
                         <table>
                             <label>
@@ -226,7 +231,7 @@
                     </div>
 
                     <div>
-                        <table id="healOutputTable">
+                        <table class="healOutputTable">
                             <thead>
                                 <tr>
                                     <th>Rodzaj</th>
@@ -241,6 +246,28 @@
                         </table>
                         <p>
                             <h6 style="margin-top: 2px; font-size: 14px;">Dokładność +- 2</h6 style="margin-top: 5px; font-size: 16px;">
+                        </p>
+
+                        <table class="healOutputTable">
+                            <thead>
+                                <tr>
+                                    <th>staki</th>
+                                    <th>g</th>
+                                    <th>t</th>
+                                    <th>gg</th>
+                                    <th>gt</th>
+                                    <th>tt</th>
+                                    <th>ggg</th>
+                                    <th>ggt</th>
+                                    <th>gtt</th>
+                                    <th>ttt</th>
+                                </tr>
+                            </thead>
+                            <tbody id="healOutput2">
+                            </tbody>
+                        </table>
+                        <p>
+                            <h6 style="margin-top: 2px; font-size: 14px;">wartości liczone na rozkazie</br>g - heal grupowy</br>t - heal targetowy</h6 style="margin-top: 5px; font-size: 16px;">
                         </p>
                     </div>
 
