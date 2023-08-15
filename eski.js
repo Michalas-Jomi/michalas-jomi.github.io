@@ -175,7 +175,11 @@ function calculate() {
     </thead><tbody>`
 
     for (let gw = 0; gw < 9; gw++) {
-        html += `<tr><td>${gw}</td>`
+        html += `<tr><td style="text-align: center;">`
+        for (let i = 0; i <= gw % 3; i++) {
+            html += `<img src="icons/gw${parseInt(gw / 3) + 1}.png">`
+        }
+        html += '</td>'
         for (let i = 0; i < 4; i++) {
             let x = ileOR[i][gw]
             let base = -Math.pow(5, parseInt(gw / 3)) * (i + 1) - 20
@@ -206,7 +210,11 @@ function calculate() {
     </thead><tbody>`
 
     for (let gw = 0; gw < 9; gw++) {
-        html += `<tr><td>${gw+1}*</td>`
+        html += `<tr><td style="text-align: center;">`
+        for (let i = 0; i <= gw % 3; i++) {
+            html += `<img src="icons/gw${parseInt(gw / 3) + 1}.png">`
+        }
+        html += '</td>'
         for (let i = 0; i < 3; i++) {
             let x = ileOS[i][gw]
             let base = -Math.pow(5, parseInt(gw / 3)) * (i + 1) - 20
