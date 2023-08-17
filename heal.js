@@ -8,6 +8,7 @@ function heal() {
     let inpGrp = document.getElementById('healInpGrp')
     let inpRoz = document.getElementById('healInpRoz')
     let inpPswc = document.getElementById('healInpPswc')
+    let inpMerge = document.getElementById('healInpMerge')
 
 
     function recalculate() {
@@ -57,6 +58,22 @@ function heal() {
     }
 
     [inpMoc, inpWiedza, inpMod, inpTarget, inpGrp, inpRoz, inpPswc].forEach(inp => inp.onchange = recalculate)
+    inpMerge.onclick = () => {
+        inpMoc.value = Build.getStat('moc')
+        inpWiedza.value = Build.getStat('wiedza')
+        inpMod.value = Build.getEffect('abaf')
+
+        let x;
+        if ((x = Skills.getLvL('dr1')) != 0)
+            inpTarget.value = parseInt(68.5 + 8.5 * x)
+        if ((x = Skills.getLvL('dr8')) != 0)
+            inpGrp.value = parseInt(52.5 + 6.5 * x)
+
+
+        recalculate()
+    }
+
+    setTimeout(inpMerge.onclick, 1)
 
     recalculate()
 }

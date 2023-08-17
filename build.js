@@ -1,35 +1,44 @@
 class Build {
     static calculate() {
-            let map = {}
-            let counter = {}
+            let statsMap = {}
+            let driffsMap = {}
+            let driffsCounter = {}
             let effects = []
 
             // zbieranie danych
             for (let slot of GUI.eqSlots)
-                if (slot.item != null)
+                if (slot.item != null) {
                     for (let driffSlot of slot.item.driffs) {
                         let driff = driffSlot.driff
                         if (driff == null)
                             continue
 
-                        if (driff.data.fullname in map)
-                            map[driff.data.fullname] += driff.effekt()
+                        if (driff.data.fullname in driffsMap)
+                            driffsMap[driff.data.fullname] += driff.effekt()
                         else
-                            map[driff.data.fullname] = driff.effekt()
+                            driffsMap[driff.data.fullname] = driff.effekt()
 
-                        if (driff.data.fullname in counter)
-                            counter[driff.data.fullname] += 1
+                        if (driff.data.fullname in driffsCounter)
+                            driffsCounter[driff.data.fullname] += 1
                         else
-                            counter[driff.data.fullname] = 1
+                            driffsCounter[driff.data.fullname] = 1
                     }
+                    for (let stat of slot.item.data.getStats()) {
+                        if (stat == 'r_obr' || stat == 'obr')
+                            continue
+                        if (!(stat in statsMap))
+                            statsMap[stat] = 0
+                        statsMap[stat] += slot.item.getStat(stat)
+                    }
+                }
 
-            for (let key in map) {
+            for (let key in driffsMap) {
                 let data = DriffData.driffs[key]
-                effects.push(new Effect(data, map[key], counter[key]))
+                effects.push(new Effect(data, driffsMap[key], driffsCounter[key]))
             }
 
 
-            GUI.show(effects)
+            GUI.show(effects, statsMap)
         }
         /**
          * 
@@ -43,6 +52,8 @@ class Build {
         for (let effect of effects) {
             power += effect.effect / effect.data.amp * Math.pow(effect.data.pow)
         }
+
+        return power
     }
 
     /**
@@ -50,46 +61,7 @@ class Build {
      * @returns {String}
      */
     static save() {
-        /*
-        let saveDriff = driff => {
-            if (driff == null)
-                return 0
-
-            let map = {}
-
-            map.a = driff.lvl
-            map.b = driff.tier
-            map.c = driff.data.name
-
-            return map
-        }
-        let saveItem = item => {
-            if (item == null)
-                return 0
-
-            let map = {}
-
-            map.a = item.data.type
-            map.b = item.data.name
-
-            map.c = []
-            for (let driff of item.driffs)
-                map.c.push(driff.driff == null ? 0 : saveDriff(driff.driff))
-
-            return map
-        }
-        let saveSlot = slot => {
-            if (slot.type == null && slot.item == null)
-                return 0
-
-            let map = {}
-
-            map.a = slot.type
-            map.b = saveItem(slot.item)
-
-            return map
-        }*/
-
+        let col = ['obr', 'moc', 'wiedza', 'sila', 'zreka', 'pz', 'mana', 'konda', 'res_ene', 'res_ogien', 'res_zimno', 'res_uro', 'res_siek', 'res_obuch', 'res_klut']
         let saveDriff = driff => {
             if (driff == null)
                 return '-'
@@ -98,14 +70,38 @@ class Build {
                 Build.NumToLet(driff.lvl, 1) +
                 Build.NumToLet(driff.tier, 1)
         }
+        let saveStatsMap = (map, mx) => {
+            let keys = Object.keys(map)
+            if (keys.length == 0)
+                return '-'
+
+            let x = 0
+            let w = ''
+            for (let i = 0; i < mx; i++) {
+                if (keys.includes(col[i])) {
+                    x += Math.pow(2, i)
+                    w = Build.NumToLet(map[col[i]], mx <= 9 ? 2 : 3) + w
+                }
+            }
+
+            return Build.NumToLet(x, mx <= 9 ? 2 : 4) + w
+        }
+
+        /** @param item {GUIItem} */
         let saveItem = item => {
             if (item == null)
                 return '-'
 
             let w = Build.NumToLet(item.data.id, 2)
 
+            w += Build.NumToLet(item.gw, 1)
+
+            w += saveStatsMap(item.upgrades, 8)
+            w += saveStatsMap(item.statsChanges, 15)
+
+            w += Build.NumToLet(item.driffs.length, 1)
             for (let driff of item.driffs)
-                w += (driff.driff == null ? '-' : saveDriff(driff.driff))
+                w += saveDriff(driff.driff)
 
             return w
         }
@@ -120,14 +116,40 @@ class Build {
         }
 
 
-        let w = '0'
+        let w = ''
 
+        // Statystyki bazowe
+        for (let stat of Array.of('pz', 'mana', 'konda'))
+            w += Build.NumToLet(Build.getBaseStat(stat) / 10, 2)
+        for (let stat of Array.of('sila', 'zreka', 'moc', 'wiedza'))
+            w += Build.NumToLet(Build.getBaseStat(stat), 2)
+
+        // eski.js
+        let labels = document.getElementById('eski').children[0].children
+        for (let i = 0; i <= 2; i++) { // eska odlm pl
+            let x = parseFloat(labels[i].children[0].value)
+            x = parseInt(x * 10)
+            w += Build.NumToLet(x, 2)
+        }
+
+        // skills.js
+        let prof = Skills.getProf()
+        w += Build.NumToLet(parseInt(document.getElementById('inpskillpoints').value), 2) // lvl
+        w += Build.NumToLet(Skills.allProfs.indexOf(prof), 1) // wybrana profka
+        for (let i = 1; i <= 9; i++)
+            w += Build.NumToLet(Skills.getLvL(prof + i), 1) // skille klasowe
+        for (let i = 1; i <= 5; i++)
+            w += Build.NumToLet(Skills.getLvL('s' + i), 1) // skille ogólne
+        w += Build.NumToLet(Skills.getLvL('wataha'), 1) // wataha
+
+
+        // eq
         for (let slot of GUI.eqSlots)
             w += saveSlot(slot)
         w += Build.NumToLet(GUI.invSlots.length, 2)
         for (let slot of GUI.invSlots)
             w += saveSlot(slot)
-        w += Build.NumToLet(GUI.invDriffSlots.length)
+        w += Build.NumToLet(GUI.invDriffSlots.length, 2)
         for (let driff of GUI.invDriffSlots)
             w += saveDriff(driff.driff)
 
@@ -154,7 +176,7 @@ class Build {
         add()
 
 
-        return w2
+        return '00' + w2
     }
 
     /**
@@ -174,23 +196,26 @@ class Build {
         } catch {}
 
 
-        let onlyItems = str[0] != '0'
+        let onlyItems = str[0] != '0' // true = itemki bez eq driffów
+        let onlyItemsDriffs = str.substring(0, 2) != '00' // true = itemki i eq driffów bez stat
 
         if (!onlyItems)
-            str = str.slice(1)
+            str = str.slice(1 + (!onlyItemsDriffs))
 
-        // decompressing
+        /// decompressing
 
         str = str.replaceAll(/(\d+)(.)/g, (_, count, char) => char.repeat(parseInt(count)))
 
 
-        // prepare loading
+        /// prepare loading
 
         let x = 0
 
         let is0 = () => str[x] == '-' ? ++x > 0 : false
         let get1 = () => Build.LetToNum(str[x++])
         let get2 = () => Build.LetToNum(str[x++] + str[x++])
+        let get3 = () => Build.LetToNum(str[x++] + str[x++] + str[x++])
+        let get4 = () => Build.LetToNum(str[x++] + str[x++] + str[x++] + str[x++])
 
         let loadDriff = (driffSlot) => {
             if (is0())
@@ -202,7 +227,7 @@ class Build {
 
             return new Driff(data, driffSlot, lvl, tier)
         }
-        let loadItem = () => {
+        let loadItemWithoutStats = () => {
             if (is0())
                 return null
 
@@ -216,7 +241,44 @@ class Build {
 
             return item
         }
-        let loadSlot = () => {
+        let col = ['obr', 'moc', 'wiedza', 'sila', 'zreka', 'pz', 'mana', 'konda', 'res_ene', 'res_ogien', 'res_zimno', 'res_uro', 'res_siek', 'res_obuch', 'res_klut']
+        let loadStatsMap = mx => {
+            let map = {}
+            if (is0())
+                return map
+
+            let c = mx <= 9 ? get2() : get4()
+
+            for (let i = mx - 1; i >= 0; i--) {
+                let x = Math.pow(2, i)
+                if (c >= x) {
+                    c -= x
+                    map[col[i]] = mx <= 9 ? get2() : get3()
+                }
+            }
+
+            return map
+        }
+        let loadItemWithStats = () => {
+            if (is0())
+                return null
+
+            let data = GUIItemData.fromId(get2())
+
+
+            let item = new GUIItem(data)
+
+            item.gw = get1()
+            item.upgrades = loadStatsMap(8)
+            item.statsChanges = loadStatsMap(15)
+
+            let slots = get1()
+            for (let i = 0; i < slots; i++)
+                item.driffs[i].setDriff(loadDriff(item.driffs[i]))
+
+            return item
+        }
+        let loadSlot = loadItem => {
             if (is0())
                 return new GUISlot(null)
 
@@ -229,24 +291,58 @@ class Build {
             return slot
         }
 
-        // reset
+        /// reset
 
         Build.clearGUI()
 
 
-        // loading
+        /// loading
 
+        if (!onlyItemsDriffs) {
+            // Statystyki bazowe
+            let usedPoints = 0
+            for (let i = 0; i <= 6; i++)
+                GUI.infoStats.children[1].children[0].children[i].children[1].innerText = get2() * (i <= 2 ? 10 : 1)
+            for (let stat of Array.of('pz', 'mana', 'konda'))
+                usedPoints += (Build.getBaseStat(stat) - 200) / 10
+            for (let stat of Array.of('sila', 'zreka', 'moc', 'wiedza'))
+                usedPoints += Build.getBaseStat(stat) - 10
+            let akt = parseInt(GUI.statsPoints.innerText)
+            GUI.statsPoints.innerText = akt - usedPoints
+
+
+            // eski.js
+            let labels = document.getElementById('eski').children[0].children
+            for (let i = 0; i <= 2; i++) // eska odlm pl
+                labels[i].children[0].value = get2() / 10
+            calculate()
+
+            // skills.js
+            let lvl = get2()
+            document.getElementById('inpskillpoints').value = lvl
+            Build.setPoints(lvl)
+            let prof = Skills.allProfs[get1()]
+
+            Skills.makeSkills(prof)
+            for (let i = 1; i <= 9; i++) // skille klasowe
+                Skills.setLvL(prof + i, get1()) // TODO Skills.setLvl(prof, lvl) w skills.js
+            for (let i = 1; i <= 5; i++) // skille ogólne
+                Skills.setLvL('s' + i, get1())
+            Skills.setLvL('wataha', get1()) // wataha
+        }
+
+        // eq
         for (let i = 0; i < 12; i++)
-            GUI.addEqSlot(loadSlot())
+            GUI.addEqSlot(loadSlot(onlyItemsDriffs ? loadItemWithoutStats : loadItemWithStats))
         if (onlyItems) {
             while (x < str.length)
-                GUI.addInvSlot(loadSlot())
+                GUI.addInvSlot(loadSlot(loadItemWithoutStats))
             for (let i = 0; i < 128; i++)
                 GUI.addInvDriffSlot(new GUIInvDriffSlot())
         } else {
             let mx = get2()
             for (let i = 0; i < mx; i++)
-                GUI.addInvSlot(loadSlot())
+                GUI.addInvSlot(loadSlot(onlyItemsDriffs ? loadItemWithoutStats : loadItemWithStats))
             mx = get2()
             for (let i = 0; i < mx; i++) {
                 let slot = new GUIInvDriffSlot()
@@ -383,6 +479,55 @@ class Build {
         }
 
         return w
+    }
+
+    /**
+     *  zczutyje aktualną statystyke z div#buildinfoStats
+     * @param {String} name 
+     * @returns {Number}
+     */
+    static getStat(name) {
+        let i = ['pz', 'mana', 'konda', 'sila', 'zreka', 'moc', 'wiedza'].indexOf(name)
+        if (i != -1)
+            return parseInt(GUI.infoStats.children[1].children[0].children[i].children[2].innerText)
+        i = ['res_siek', 'res_obuch', 'res_klut', 'res_ogien', 'res_zimno', 'res_ene', 'res_uro'].indexOf(name)
+        return parseInt(GUI.infoStats.children[1].children[0].children[i].children[5].innerText)
+    }
+
+    /**
+     * zczytuje aktualną bazową statystyke z div#buildinfoStats
+     * @param {String} name 
+     * @returns {Number}
+     */
+    static getBaseStat(name) {
+        let i = ['pz', 'mana', 'konda', 'sila', 'zreka', 'moc', 'wiedza'].indexOf(name)
+        return parseInt(GUI.infoStats.children[1].children[0].children[i].children[1].innerText)
+    }
+
+    static getEffect(name) {
+        name = DriffData.fromName(name).fullname + ' '
+        for (let child of GUI.infoDriffs.children) {
+            if (child.children[1].innerText == name) {
+                let x = child.children[2].innerText
+                x.substr(0, x.length - 1)
+                return parseFloat(x)
+            }
+        }
+        return 0
+    }
+
+    static __pointsLvL = 0
+        /**
+         * Odświeża punkty statystyk do rozdania
+         * @param {Number} lvl 1 - 140 
+         */
+    static setPoints(lvl) {
+        let div = lvl - Build.__pointsLvL
+        let akt = parseInt(GUI.statsPoints.innerText)
+
+        GUI.statsPoints.innerText = akt + div * 4
+
+        Build.__pointsLvL = lvl
     }
 }
 
@@ -611,7 +756,7 @@ class Driff {
             x += this.lvl - 18
 
         if (this.slot != null)
-            x *= this.slot.item.data.epik ? 1.6 : 1
+            x *= this.slot.item.getDriffAmplifire()
 
         return this.data.amp * x
     }
@@ -657,9 +802,11 @@ class GUI {
     static inv = document.getElementById('buildinv')
     static invDriffs = document.getElementById('buildinvDriffs')
     static select = document.getElementById('buildItemSlectDiv')
-    static info = document.getElementById('buildinfo')
+    static infoStats = document.getElementById('buildinfoStats')
+    static infoDriffs = document.getElementById('buildinfoDriffs')
     static conf = document.getElementById('buildconf')
     static foot = document.getElementById('buildfoot')
+    static statsPoints = document.getElementById('buildStatsPoints')
 
     static eqSlots = []
     static invSlots = []
@@ -681,6 +828,7 @@ class GUI {
 
         GUI._makeEpiks()
 
+        Build.setPoints(140)
 
         if (window.location.search != '')
             Build.load(window.location.search.slice(1))
@@ -770,21 +918,100 @@ class GUI {
      * Wyświetla aktualne modyfikatory
      * @param {Array<Effect>} effects 
      */
-    static show(effects) {
-        GUI.info.innerHTML = ''
+    static show(effects = null, stats = null) {
+        if (effects !== null) {
+            let html = ''
 
-        let make = (color, text) => `<span style='color: ${color};'>${text}</span>`
+            for (let effect of effects) {
+                html += '<div>'
 
-        for (let effect of effects) {
-            GUI.info.innerHTML += '<div>'
+                html += color('white', `|${effect.count}x| `)
+                html += color('lightblue', `${effect.data.fullname} `)
+                html += color('lightblue', `${Math.round(effect.effect*100)/100}% `)
+                if (effect.count > 3)
+                    html += color('white', `(suma ${effect.rawEffect}%)`)
 
-            GUI.info.innerHTML += make('white', `|${effect.count}x| `)
-            GUI.info.innerHTML += make('lightblue', `${effect.data.fullname} `)
-            GUI.info.innerHTML += make('lightblue', `${Math.round(effect.effect*100)/100}% `)
-            if (effect.count > 3)
-                GUI.info.innerHTML += make('white', `(suma ${effect.rawEffect}%)`)
+                html += '</div>'
+            }
 
-            GUI.info.innerHTML += '</div>'
+            GUI.infoDriffs.innerHTML = html
+        }
+
+        if (stats !== null) {
+            let table = GUI.infoStats.children[1].children[0]
+            table.children[0].children[2].innerText = Build.getBaseStat('pz') + (stats['pz'] === undefined ? 0 : stats['pz'])
+            table.children[1].children[2].innerText = Build.getBaseStat('mana') + (stats['mana'] === undefined ? 0 : stats['mana'])
+            table.children[2].children[2].innerText = Build.getBaseStat('konda') + (stats['konda'] === undefined ? 0 : stats['konda'])
+
+            table.children[3].children[2].innerText = Build.getBaseStat('sila') + (stats['sila'] === undefined ? 0 : stats['sila'])
+            table.children[4].children[2].innerText = Build.getBaseStat('zreka') + (stats['zreka'] === undefined ? 0 : stats['zreka'])
+            table.children[5].children[2].innerText = Build.getBaseStat('moc') + (stats['moc'] === undefined ? 0 : stats['moc'])
+            table.children[6].children[2].innerText = Build.getBaseStat('wiedza') + (stats['wiedza'] === undefined ? 0 : stats['wiedza'])
+
+
+            /**
+            v* 241 - 81.033
+             * 287 to 82,57
+             * 283 - 82,43
+             */
+
+            let calcRes = x => {
+                if (x <= 30)
+                    return x
+                x -= 30
+
+                if (x <= 30)
+                    return 30 + x * .5
+                x -= 30
+
+                if (x <= 40)
+                    return 45 + x * .375
+                x -= 40
+
+                if (x < 50)
+                    return 60 + x * .19
+                if (x == 50)
+                    return 70
+                x -= 50
+
+                if (x <= 50)
+                    return 70 + x * .18
+                x -= 50
+
+                if (x <= 15)
+                    return 79 + x * .065
+                x -= 15
+
+                if (x <= 25)
+                    return 80 + x * .04
+                x -= 25
+
+                if (x <= 10)
+                    return 81 + x * .03
+                x -= 10
+
+                // 287 - 82,57
+                // 283 - 82,43
+                // ciut mało danych
+                return 81.3 + x * .035
+
+            }
+
+            table.children[0].children[5].innerText = stats['res_siek'] === undefined ? 0 : stats['res_siek']
+            table.children[0].children[6].innerText = stats['res_siek'] === undefined ? 0 : calcRes(stats['res_siek']) + '%'
+            table.children[1].children[5].innerText = stats['res_obuch'] === undefined ? 0 : stats['res_obuch']
+            table.children[1].children[6].innerText = stats['res_obuch'] === undefined ? 0 : calcRes(stats['res_obuch']) + '%'
+            table.children[2].children[5].innerText = stats['res_klut'] === undefined ? 0 : stats['res_klut']
+            table.children[2].children[6].innerText = stats['res_klut'] === undefined ? 0 : calcRes(stats['res_klut']) + '%'
+
+            table.children[3].children[5].innerText = stats['res_ogien'] === undefined ? 0 : stats['res_ogien']
+            table.children[3].children[6].innerText = stats['res_ogien'] === undefined ? 0 : calcRes(stats['res_ogien']) + '%'
+            table.children[4].children[5].innerText = stats['res_zimno'] === undefined ? 0 : stats['res_zimno']
+            table.children[4].children[6].innerText = stats['res_zimno'] === undefined ? 0 : calcRes(stats['res_zimno']) + '%'
+            table.children[5].children[5].innerText = stats['res_ene'] === undefined ? 0 : stats['res_ene']
+            table.children[5].children[6].innerText = stats['res_ene'] === undefined ? 0 : calcRes(stats['res_ene']) + '%'
+            table.children[6].children[5].innerText = stats['res_uro'] === undefined ? 0 : stats['res_uro']
+            table.children[6].children[6].innerText = stats['res_uro'] === undefined ? 0 : calcRes(stats['res_uro']) + '%'
         }
     }
 }
@@ -804,6 +1031,7 @@ class GUIConf {
 
         nav: {
             make: document.getElementById('buildConfNavMake'),
+            switch: document.getElementById('buildConfNavSwitch'),
             save: document.getElementById('buildConfNavSave'),
 
             invItems: document.getElementById('buildInvNavBItemy'),
@@ -818,6 +1046,18 @@ class GUIConf {
             close: document.getElementById('buildEditClose'),
 
             driffs: document.getElementById('buildEditDriffs'),
+            stats: document.getElementById('buildEditStats'),
+
+            statsButtons: {
+                reset: document.getElementById('buildEditStatsUpgradesResetButton'),
+                upgrades: document.getElementById('buildEditStatsUpgradesButton'),
+                changes: document.getElementById('buildEditStatsChangesButton'),
+            },
+
+            switch: {
+                stats: document.getElementById('buildEditItemSwitchStats'),
+                driffs: document.getElementById('buildEditItemSwitchDriffs'),
+            }
         }
     }
 
@@ -856,6 +1096,25 @@ class GUIConf {
 
             GUIConf.divs.save.main.style.setProperty('display', 'block')
         }
+        GUIConf.divs.nav.switch.onclick = () => {
+            if (!GUIConf.driffsHidden()) {
+                GUIConf.divs.nav.switch.innerText = 'Drify'
+                GUIConf.divs.edit.switch.driffs.style.setProperty('display', 'none')
+                GUIConf.divs.edit.switch.stats.style.setProperty('display', 'block')
+                GUI.infoDriffs.style.setProperty('display', 'none')
+                GUI.infoStats.style.setProperty('display', 'block')
+                for (let el of document.getElementsByClassName('buildEditInfoDriffsInfo'))
+                    el.style.setProperty('display', 'none')
+            } else {
+                GUIConf.divs.nav.switch.innerText = 'Staty'
+                GUIConf.divs.edit.switch.driffs.style.setProperty('display', 'block')
+                GUIConf.divs.edit.switch.stats.style.setProperty('display', 'none')
+                GUI.infoDriffs.style.setProperty('display', 'block')
+                GUI.infoStats.style.setProperty('display', 'none')
+                for (let el of document.getElementsByClassName('buildEditInfoDriffsInfo'))
+                    el.style.setProperty('display', 'block')
+            }
+        }
 
         GUIConf.divs.nav.invItems.onclick = () => {
             GUI.inv.style.setProperty('display', 'block')
@@ -867,6 +1126,73 @@ class GUIConf {
             GUI.select.style.setProperty('display', 'none')
             GUI.invDriffs.style.setProperty('display', 'block')
         }
+
+        GUIConf.divs.edit.statsButtons.reset.onclick = () => {
+            if (GUIConf.editItem == null)
+                return
+            GUIConf.editItem.upgrades = {}
+
+            GUIConf.edit(GUIConf.editItem)
+            Build.calculate()
+        }
+        GUIConf.divs.edit.statsButtons.upgrades.onclick = () => {
+            let on = GUIConf.divs.edit.statsButtons.upgrades.style.getPropertyValue('background-color') == 'green'
+
+            GUIConf.divs.edit.statsButtons.upgrades.style.setProperty('background-color', on ? 'red' : 'green')
+
+            for (let el of document.getElementsByClassName('buildUpgradeItem'))
+                el.style.setProperty('display', on ? 'none' : 'unset')
+        }
+        GUIConf.divs.edit.statsButtons.changes.onclick = () => {
+            let on = GUIConf.divs.edit.statsButtons.changes.style.getPropertyValue('background-color') == 'green'
+
+            GUIConf.divs.edit.statsButtons.changes.style.setProperty('background-color', on ? 'red' : 'green')
+
+            for (let el of document.getElementsByClassName('buildModifyItem'))
+                el.style.setProperty('display', on ? 'none' : 'unset')
+        }
+
+
+        for (let child of GUI.infoStats.children[1].children[0].children) {
+            let stat = child.children[0].children[0].src.match(/.*\/(.+)\.png/)[1]
+            let amp = Array.of('pz', 'mana', 'konda').includes(stat) ? 10 : 1
+
+            for (let x of Array.of(1, 10, -1, -10)) {
+                let b = document.createElement('button')
+                b.className = 'buildStatsPointsButton'
+                b.innerText = (x >= 0 ? '+' : '') + x
+                child.children[3].appendChild(b)
+                b.onclick = () => {
+                    let pkt = parseInt(GUI.infoStats.children[0].children[0].innerText)
+                    if (x > 0 && pkt < x) {
+                        Info.showMessage('Za mało punktów statystyk')
+                        return
+                    }
+                    let akt = parseInt(child.children[1].innerText)
+                    akt += x * amp
+                    if ((amp == 1 && akt < 10) || (amp == 10 && akt < 200)) {
+                        Info.showMessage('Niedozwolony ruch statystykowy')
+                        return
+                    }
+
+                    child.children[1].innerText = akt
+                    GUI.infoStats.children[0].children[0].innerText = pkt - x
+
+                    Build.calculate()
+                }
+            }
+        }
+
+        GUI.infoStats.children[0].children[1].onclick = () => {
+            let on = GUI.infoStats.children[0].children[1].style.getPropertyValue('background-color') == 'green'
+            GUI.infoStats.children[0].children[1].style.setProperty('background-color', on ? 'red' : 'green')
+
+            for (let el of document.getElementsByClassName('buildStatsPointsButton'))
+                el.style.setProperty('display', on ? 'none' : 'unset')
+
+        }
+        GUI.infoStats.children[0].children[1].onclick()
+
 
         GUIConf._makeSelect()
     }
@@ -950,12 +1276,113 @@ class GUIConf {
         if (item != null) {
             item.slot.setActive(true)
 
+            /// Driffs
             GUIConf.divs.edit.driffs.innerHTML = ''
             for (let driff of item.driffs)
                 GUIConf.divs.edit.driffs.appendChild(driff.getForm())
+
+
+            /// Stats
+            let html = '<div>'
+            for (let i of item.data.getStatsUp())
+                if (i != 'wartosc' && i != 'waga')
+                    html += '<h4>' + color('#dfdf94', GUIItemData.statName(i) + ': ') + color('#989898', GUIConf.editItem.getStat(i)) + '</h4>'
+            html += '</br>'
+            for (let i of item.data.getStats()) {
+                html += '<h4>' + color('#e4e45b', GUIItemData.statName(i) + ': ') + color('#989898', GUIConf.editItem.getStat(i))
+                if (i in item.upgrades)
+                    html += color('red', ` (+${Math.ceil(item.upgrades[i] * (['pz', 'mana', 'konda'].includes(i) ? 10 : 1) * GUIConf.editItem.getUpgradeAmplifire())})`)
+                if (i in item.statsChanges)
+                    html += color('blue', ` (${item.statsChanges[i] >= 0 ? '+' : ''}${item.statsChanges[i]})`)
+                if (['obr', 'pz', 'mana', 'konda', 'moc', 'wiedza', 'sila', 'zreka'].includes(i))
+                    html += ` <button class="buildUpgradeItem" style="display: none;" onclick="GUIConf.upgradeItem('${i}')">${color('red', '+1')}</button>`
+                if (i != 'r_obr') {
+                    html += ` <button class="buildModifyItem" onclick="GUIConf.modifyItem('${i}', 1)">${color('blue', '+1')}</button>`
+                    html += ` <button class="buildModifyItem" onclick="GUIConf.modifyItem('${i}', 10)">${color('blue', '+10')}</button>`
+                    html += ` <button class="buildModifyItem" onclick="GUIConf.modifyItem('${i}', -1)">${color('blue', '-1')}</button>`
+                    html += ` <button class="buildModifyItem" onclick="GUIConf.modifyItem('${i}', -10)">${color('blue', '-10')}</button>`
+                }
+                html += '</h4>'
+            }
+            html += '</div>'
+
+            GUIConf.divs.edit.stats.innerHTML = html
+
+            GUIConf.divs.edit.statsButtons.changes.onclick()
+            GUIConf.divs.edit.statsButtons.changes.onclick()
         }
 
         GUIConf.setInfo()
+
+        if (item != null) {
+            setTimeout(() => {
+                GUIConf.divs.edit.statsButtons.upgrades.onclick()
+                GUIConf.divs.edit.statsButtons.upgrades.onclick()
+            }, 1)
+        }
+    }
+
+    /**
+     * Ulepsza edytowany itemek o 1 poziom w góre w daną statystyke
+     * @param {String} stat 
+     */
+    static upgradeItem(stat) {
+        if (!(stat in GUIConf.editItem.upgrades))
+            GUIConf.editItem.upgrades[stat] = 0
+
+        let x = 1
+        if (stat == 'obr') {
+            x = 3
+        } else {
+            let ulep = GUIConf.editItem.aktUlep() + 1
+            if (GUIConf.editItem.data.rank <= 6)
+                x += (ulep >= 8)
+            else if (GUIConf.editItem.data.rank <= 9)
+                x += (ulep >= 7) + (ulep >= 10)
+            else
+                x += (ulep >= 6) + (ulep >= 8) + (ulep >= 10)
+        }
+        GUIConf.editItem.upgrades[stat] += x
+
+        GUIConf.edit(GUIConf.editItem)
+        Build.calculate()
+    }
+
+    /**
+     * modyfikuje staty edytowanego itemeka o x poziomów w daną statystyke
+     * @param {String} stat 
+     */
+    static modifyItem(stat, x) {
+        let i = GUIConf.editItem.statsChanges[stat]
+        if (i === undefined)
+            i = 0
+        i += x
+
+        if (i == 0)
+            delete GUIConf.editItem.statsChanges[stat]
+        else
+            GUIConf.editItem.statsChanges[stat] = i
+
+        GUIConf.edit(GUIConf.editItem)
+        Build.calculate()
+    }
+
+    /**
+     * inkrustuje (1) lub deinkrustuje (-1) edytowany itemek
+     * @param {Number} x 1 / -1 
+     */
+    static incrustItem(x) {
+        GUIConf.editItem.gw += x
+        if (GUIConf.editItem.gw < 0 || GUIConf.editItem.gw > 8) {
+            GUIConf.editItem.gw -= x
+            Info.showMessage('Limit inkrustacji osiągnięty')
+            return
+        }
+
+        GUIConf.editItem.refreshMaxPower()
+
+        GUIConf.edit(GUIConf.editItem)
+        Build.calculate()
     }
 
     /**
@@ -990,16 +1417,33 @@ class GUIConf {
         GUIConf.divs.edit.main.style.setProperty('display', 'block')
         this.divs.save.main.style.setProperty('display', 'none')
 
-        let color = (color, text) => `<span style='color: ${color}'>${text}</span>`
         if (GUIConf.editItem != null) {
-
             let data = GUIConf.editItem.data
+            let ulep = GUIConf.editItem.aktUlep()
             html = `
                 <h2>
-                    <img src='${data.getImgSrc()}'>
-                    ${data.fullname} [${data.rank}]
+                    <table>
+                        <tr>
+                            <td rowspan="2">
+                                <img src='${data.getImgSrc()}'>
+                            </td>
+                            <td style="text-align: center;">
+                                ${GUIConf.editItem.getGwGUI().outerHTML}
+                                <span class="buildUpgradeItem" style="display: none;">
+                                    <button onclick="GUIConf.incrustItem(1)">+</button>
+                                    <button onclick="GUIConf.incrustItem(-1)">-</button>
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="font-size: 1rem;">
+                                ${data.fullname} [${romanize(data.rank) /* funkcja romanize z eski.js */}${ulep == 0 ? '' : color('red', '+' + ulep)}]
+                            </td>
+                        </tr>
+                    </table>
                 </h2>
-                <h3>Pojemność: ${GUIConf.editItem.calcPower()}/${GUIItem.caps[data.rank][0]}</h3>
+                <span class="buildEditInfoDriffsInfo" style="display: ${GUIConf.driffsHidden() ? 'none' : 'block'};">
+                <h3>Pojemność: ${GUIConf.editItem.calcPower()}/${GUIConf.editItem.maxPower}</h3>
                 `
             for (let i = 0; i < GUIConf.editItem.driffs.length; i++) {
                 let driff = GUIConf.editItem.driffs[i]
@@ -1011,17 +1455,11 @@ class GUIConf {
                     text += ` ${driff.driff.data.name}`
                     text = color('lightblue', text)
                     text += color('white', ` [${driff.driff.lvl}]`)
+                    text = `<span style="position: relative; with: 26px; height: 26px;">${driff.driff.getGUI().innerHTML}</span><span style="margin-right: 28px;"></span>` + text
                 }
 
                 html += `<h3>Slot ${i+1}: ${text} </h3>`
             }
-            html += '<div style="display: none;">'
-            for (let i of data.getStatsUp())
-                html += `<h4>${GUIItemData.statName(i)}: ${GUIConf.editItem.getStat(i)}</h4>`
-            html += '</br>'
-            for (let i of data.getStats())
-                html += `<h4>${GUIItemData.statName(i)}: ${GUIConf.editItem.getStat(i)}</h4>`
-            html += '</div>'
 
         } else if (GUIConf.editDriff != null) {
             let driff = GUIConf.editDriff.driff
@@ -1045,6 +1483,16 @@ class GUIConf {
             GUIConf.divs.edit.main.style.setProperty('display', 'none')
 
         GUIConf.divs.edit.info.innerHTML = html
+    }
+
+
+    /**
+     * jeśli są widoczne staty zwraca True,
+     * jeśli są widoczne driffy zwraca False
+     * @returns {boolean}
+     */
+    static driffsHidden() {
+        return !(GUIConf.divs.nav.switch.innerText == 'Staty')
     }
 }
 
@@ -1595,10 +2043,13 @@ class GUIItem {
     constructor(data) {
         let cap = GUIItem.caps[data.rank]
 
-        this.maxPower = cap[0]
+        this.gw = 0
         this.data = data
         this.slot = null
         this.driffs = []
+        this.upgrades = {}
+        this.maxPower = cap[0]
+        this.statsChanges = {}
 
         this._buildView()
 
@@ -1608,20 +2059,7 @@ class GUIItem {
             this.body.appendChild(driff.get())
         }
 
-        switch (cap[1]) {
-            case 1:
-                this.driffs[0].container.style.setProperty('left', '30px')
-                break
-            case 2:
-                this.driffs[0].container.style.setProperty('left', '11px')
-                this.driffs[1].container.style.setProperty('left', '49px')
-                break
-            case 3:
-                this.driffs[0].container.style.setProperty('left', '0px')
-                this.driffs[1].container.style.setProperty('left', '30px')
-                this.driffs[2].container.style.setProperty('left', '60px')
-                break
-        }
+        this.setUpGUIDriffsSlots()
 
 
         this.container.onclick = ev => GUIConf.edit(this)
@@ -1638,8 +2076,89 @@ class GUIItem {
         this.setIcon(this.data.getImgSrc())
     }
 
+    /**
+     * Rozmieszcza sloty dirffów
+     */
+    setUpGUIDriffsSlots() {
+        switch (this.driffs.length) {
+            case 1:
+                this.driffs[0].container.style.setProperty('left', '30px')
+                break
+            case 2:
+                this.driffs[0].container.style.setProperty('left', '11px')
+                this.driffs[1].container.style.setProperty('left', '49px')
+                break
+            case 3:
+                this.driffs[0].container.style.setProperty('left', '0px')
+                this.driffs[1].container.style.setProperty('left', '30px')
+                this.driffs[2].container.style.setProperty('left', '60px')
+                break
+        }
+    }
+
+    /**
+     * zwraca końcową wartość statystki
+     * @param {string} stat 
+     * @returns {Number | String}
+     */
     getStat(stat) {
-        return this.data.getStat(stat)
+        if (stat == 'r_obr' || stat == 'wym_klasa')
+            return this.data.getStat(stat)
+        let w = this.data.getStat(stat)
+        let amp = ['pz', 'mana', 'konda'].includes(stat) ? 10 : 1
+
+        if (stat == 'obr')
+            w *= [0, .015, .03, .05, .075, .1, .125, .175, .25][this.gw] * (this.data.epik ? 2 : 1) + 1
+
+        return Math.ceil(
+            w +
+            (stat in this.statsChanges ? this.statsChanges[stat] : 0) +
+            Math.ceil(amp * (stat in this.upgrades ? this.upgrades[stat] : 0) * this.getUpgradeAmplifire())
+        )
+    }
+
+    /**
+     * liczy aktualny poziom ulepszenia itemku
+     */
+    aktUlep() {
+        if (Array.of(this.upgrades).length == 1 && 'obr' in this.upgrades)
+            return this.upgrades['obr'] / 3
+
+        let sum = 0
+        for (let stat in this.upgrades)
+            if (stat == 'obr')
+                sum += this.upgrades[stat] / 3
+            else
+                sum += this.upgrades[stat]
+
+        if (this.data.rank <= 3) // mf
+            return sum // +n
+        if (this.data.rank <= 6) { // sf
+            sum -= 7
+            if (sum <= 0)
+                return 7 + sum // +7
+            return 7 + sum / 2
+        }
+        if (this.data.rank <= 9) { // wf
+            sum -= 6
+            if (sum <= 0)
+                return 6 + sum // +6
+            sum -= 6
+            if (sum <= 0)
+                return 9 + sum / 2 // +9
+            return 9 + sum / 3
+        }
+        // of
+        sum -= 5
+        if (sum <= 0) // +5
+            return 5 + sum
+        sum -= 4
+        if (sum <= 0) // +7
+            return 5 + 2 + sum / 2
+        sum -= 6
+        if (sum <= 0) // +9
+            return 7 + 2 + sum / 3
+        return 9 + sum / 4
     }
 
     /**
@@ -1662,6 +2181,34 @@ class GUIItem {
      */
     overPower() {
         return this.calcPower() > this.maxPower
+    }
+
+    /**
+     * prezlicza ponownie pojemność itemku
+     */
+    refreshMaxPower() {
+        this.maxPower = GUIItem.caps[this.data.rank][0]
+        if (this.gw > 5) {
+            this.maxPower += [1, 2, 4][this.gw - 6]
+            if (this.data.rank < 4) {
+                if (this.driffs.length < 2) {
+                    let driff = new GUIDriffSlot(this)
+                    this.driffs.push(driff)
+                    this.body.appendChild(driff.get())
+                    this.setUpGUIDriffsSlots()
+                } else if (this.overPower()) {
+                    this.driffs[1].inpEx.onclick()
+                }
+            }
+            GUIConf.setInfo()
+        } else if (this.data.rank < 4 && this.driffs.length > 1) {
+            let driff = this.driffs.pop()
+            driff.inpEx.onclick()
+            if (driff.container.parentNode != null)
+                driff.container.parentNode.removeChild(driff.container)
+            this.setUpGUIDriffsSlots()
+            GUIConf.setInfo()
+        }
     }
 
     /**
@@ -1698,6 +2245,43 @@ class GUIItem {
     refreshGUIDriffs() {
         for (let driff of this.driffs)
             driff.refreshGUI()
+    }
+
+    /**
+     * Zwraca span z img gwiazdek
+     * @returns {HTMLSpanElement}
+     */
+    getGwGUI() {
+        let span = document.createElement('span')
+
+        let tier = parseInt(this.gw / 3) + 1
+        let count = this.gw % 3 + 1
+
+        for (let i = 0; i < count; i++)
+            span.innerHTML += `<img src="icons/gw${tier}.png" alt="gwT${tier}">`
+
+        return span
+    }
+
+    /**
+     * zwraca bonus do efektu driffów
+     * @returns {Number}
+     */
+    getDriffAmplifire() {
+        let base = this.data.epik ? 1.6 : 1
+        if (this.gw < 6)
+            return base
+        return [.03, .08, .15][this.gw - 6] + base
+    }
+
+    /**
+     * zwraca bonus do ulepszeń
+     * @returns {Number}
+     */
+    getUpgradeAmplifire() {
+        if (this.gw < 3)
+            return 1
+        return [1.1, 1.15, 1.25, 1.5, 1.8, 2][this.gw - 3]
     }
 }
 class GUIItemData {
@@ -1759,20 +2343,20 @@ class GUIItemData {
         wiedza: 'wiedza',
         zreka: 'zręczność',
         obr: 'obrażenia',
-        r_obr: 'rodzaj_obrażeń',
-        res_ene: 'odporność_energia',
-        res_ogien: 'odporność_ogień',
-        res_zimno: 'odporność_zimno',
-        res_uro: 'odporność_uroki',
-        res_klut: 'pancerz_kłute',
-        res_obuch: 'pancerz_obuchowe',
-        res_siek: 'pancerz_sieczne',
-        wym_klasa: 'wymagana_klasa',
-        wym_lvl: 'wymagany_poziom',
-        wym_moc: 'wymagana_moc',
-        wym_sila: 'wymagana_siła',
-        wym_wiedza: 'wymagana_wiedza',
-        wym_zreka: 'wymagana_zręczność',
+        r_obr: 'rodzaj obrażeń',
+        res_ene: 'odporność energia',
+        res_ogien: 'odporność ogień',
+        res_zimno: 'odporność zimno',
+        res_uro: 'odporność uroki',
+        res_klut: 'pancerz kłute',
+        res_obuch: 'pancerz obuchowe',
+        res_siek: 'pancerz sieczne',
+        wym_klasa: 'wymagana klasa',
+        wym_lvl: 'wymagany poziom',
+        wym_moc: 'wymagana moc',
+        wym_sila: 'wymagana siła',
+        wym_wiedza: 'wymagana wiedza',
+        wym_zreka: 'wymagana zręczność',
     }
 
     getStats() {
@@ -2038,6 +2622,8 @@ function initData() {
     new GUIItemData('zmij', 'Żmij', 9, 'Bron', {}, true);
 }
 
+
+const color = (color, text) => `<span style='color: ${color};'>${text}</span>`
 
 
 initData()

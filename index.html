@@ -133,8 +133,8 @@
         <article>
             <div class='body' id='eski' style="display: none;">
                 <div>
-                    <label>Cena eski/itemu: <input type='number' value='25' min='0'>(szt [k])</label>
-                    <label>Cena odłamku: <input type='number' value='22' min='0'>(szt [k])</label>
+                    <label>Cena eski/itemu: <input type='number' value='24' min='0'>(szt [k])</label>
+                    <label>Cena odłamku: <input type='number' value='19' min='0'>(szt [k])</label>
                     <label>Cena platy: <input type='number' value='8' min='0'>(szt [k])</label>
                     <label>Ranga itemku: <input type='number' value='0' min='0' max='12'>(0-12)</label>
                 </div>
@@ -154,7 +154,7 @@
             <div class='body' id='skille' style="display: none;">
                 <div id="profs"></div>
                 <div>
-                    <label>Lvl: <input id="inpskillpoints" type="number" max="140" min="3" value="60" step="1"></label>
+                    <label>Lvl: <input id="inpskillpoints" type="number" max="140" min="3" value="140" step="1"></label>
                 </div>
                 <div id="skillpoints"></div>
                 <div>
@@ -178,54 +178,60 @@
                     <!-- Input -->
                     <div>
                         <table>
-                            <label>
                             <tr>
-                                <td>Moc</td>
-                                <td><input id="healInpMoc" type="number" min="0" value="10"></td>
+                                <td colspan="2" style="text-align: center;">
+                                    <button id="healInpMerge">Zaporzycz dane</button>
+                                </td>
                             </tr>
-                        </label>
 
                             <label>
-                            <tr>
-                                <td>Wiedza</td>
-                                <td><input id="healInpWiedza" type="number" min="0" value="10"></td>
-                            </tr>
-                        </label>
+                                <tr>
+                                    <td>Moc</td>
+                                    <td><input id="healInpMoc" type="number" min="0" value="10"></td>
+                                </tr>
+                            </label>
 
                             <label>
-                        <tr>
-                            <td>Mod dmg</td>
-                            <td><input id="healInpMod" type="number" min="0" value="0"></td>
-                        </tr>
-                    </label>
+                                <tr>
+                                    <td>Wiedza</td>
+                                    <td><input id="healInpWiedza" type="number" min="0" value="10"></td>
+                                </tr>
+                            </label>
 
                             <label>
-                            <tr>
-                                <td>Target %</td>
-                                <td><input id="healInpTrg" type="number" step="8.5" min="77" max="247" value="196"></td>
-                            </tr>
-                        </label>
+                                <tr>
+                                    <td>Mod dmg</td>
+                                    <td><input id="healInpMod" type="number" min="0" value="0"></td>
+                                </tr>
+                            </label>
 
                             <label>
-                            <tr>
-                                <td>Grupa %</td>
-                                <td><input id="healInpGrp" type="number" step="6.5" min="59" max="189" value="150"></td>
-                            </tr>
-                        </label>
+                                <tr>
+                                    <td>Target %</td>
+                                    <td><input id="healInpTrg" type="number" step="8.5" min="77" max="247" value="196"></td>
+                                </tr>
+                            </label>
 
                             <label>
-                            <tr>
-                                <td>Rozkaz</td>
-                                <td><input id="healInpRoz" type="number" min="0" value="15"></td>
-                            </tr>
-                        </label>
+                                <tr>
+                                    <td>Grupa %</td>
+                                    <td><input id="healInpGrp" type="number" step="6.5" min="59" max="189" value="150"></td>
+                                </tr>
+                            </label>
 
                             <label>
-                            <tr>
-                                <td>Poświęcenie</td>
-                                <td><input id="healInpPswc" type="number" min="0" value="25"></td>
-                            </tr>
-                        </label>
+                                <tr>
+                                    <td>Rozkaz</td>
+                                    <td><input id="healInpRoz" type="number" min="0" value="15"></td>
+                                </tr>
+                            </label>
+
+                            <label>
+                                <tr>
+                                    <td>Poświęcenie</td>
+                                    <td><input id="healInpPswc" type="number" min="0" value="25"></td>
+                                </tr>
+                            </label>
 
                         </table>
                     </div>
@@ -292,11 +298,86 @@
                 </div>
                 <div id='buildeq'></div>
                 <div id='buildaside'>
-                    <div id='buildinfo'></div>
+                    <div id='buildinfo'>
+                        <div id="buildinfoStats" style="display: none;">
+                            <div>Dostępne punkty: <span id="buildStatsPoints">1</span><button>Rozdawanie</button></div>
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td><img src="icons/stats/pz.png"></td>
+                                        <td style="color: white;">200</td>
+                                        <td style="color: gold;"></td>
+                                        <td></td>
+                                        <td><img src="icons/stats/res_siek.png"></td>
+                                        <td style="color: gold"></td>
+                                        <td style="color: gold"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><img src="icons/stats/mana.png"></td>
+                                        <td style="color: white;">200</td>
+                                        <td style="color: gold;"></td>
+                                        <td></td>
+                                        <td><img src="icons/stats/res_obuch.png"></td>
+                                        <td style="color: gold"></td>
+                                        <td style="color: gold"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><img src="icons/stats/konda.png"></td>
+                                        <td style="color: white;">200</td>
+                                        <td style="color: gold;"></td>
+                                        <td></td>
+                                        <td><img src="icons/stats/res_klut.png"></td>
+                                        <td style="color: gold"></td>
+                                        <td style="color: gold"></td>
+                                    </tr>
+
+                                    <tr>
+                                        <td><img src="icons/stats/sila.png"></td>
+                                        <td style="color: white;">10</td>
+                                        <td style="color: gold;"></td>
+                                        <td></td>
+                                        <td><img src="icons/stats/res_ogien.png"></td>
+                                        <td style="color: gold"></td>
+                                        <td style="color: gold"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><img src="icons/stats/zreka.png"></td>
+                                        <td style="color: white;">10</td>
+                                        <td style="color: gold;"></td>
+                                        <td></td>
+                                        <td><img src="icons/stats/res_zimno.png"></td>
+                                        <td style="color: gold"></td>
+                                        <td style="color: gold"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><img src="icons/stats/moc.png"></td>
+                                        <td style="color: white;">10</td>
+                                        <td style="color: gold;"></td>
+                                        <td></td>
+                                        <td><img src="icons/stats/res_ene.png"></td>
+                                        <td style="color: gold"></td>
+                                        <td style="color: gold"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><img src="icons/stats/wiedza.png"></td>
+                                        <td style="color: white;">10</td>
+                                        <td style="color: gold;"></td>
+                                        <td></td>
+                                        <td><img src="icons/stats/res_uro.png"></td>
+                                        <td style="color: gold"></td>
+                                        <td style="color: gold"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p>Punkty Statystyk liczone na postawie lvla z zakładki Skille</p>
+                        </div>
+                        <div id="buildinfoDriffs"></div>
+                    </div>
                     <div id='buildconf'>
 
                         <div id="buildConfNav">
                             <button id="buildConfNavMake">Nowy Item</button>
+                            <button id="buildConfNavSwitch">Staty</button>
                             <button id="buildConfNavSave">Zapisz wczytaj</button>
                         </div>
 
@@ -304,14 +385,23 @@
                             <div id="buildInfoDiv"></div>
 
                             <div id="buildEditItem">
-                                <div>
-                                    <img id='buildEditIcon'>
-                                    <button id='buildEditClose' class="buildClose">X</button>
-                                    <div style="clear: both;"></div>
+                                <button id='buildEditClose' class="buildClose">X</button>
+                                <div id="buildEditItemSwitchStats" style="display: none">
+                                    <div id="buildEditStats"></div>
+                                    <div>
+                                        <button id="buildEditStatsUpgradesResetButton">Reset Ulep</button>
+                                        <button id="buildEditStatsUpgradesButton">Ulepsz</button>
+                                        <button id="buildEditStatsChangesButton">Modyfikuj</button>
+                                    </div>
                                 </div>
+                                <div id="buildEditItemSwitchDriffs">
+                                    <div>
+                                        <img id='buildEditIcon'>
+                                        <div style="clear: both;"></div>
+                                    </div>
 
-                                <div id="buildEditDriffs"></div>
-
+                                    <div id="buildEditDriffs"></div>
+                                </div>
                             </div>
                         </div>
 

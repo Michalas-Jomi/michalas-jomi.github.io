@@ -50,7 +50,7 @@
     margin-top: 20px;
     width: calc(100% - 80px);
     min-width: 400px;
-    height: 400px;
+    min-height: 400px;
     background: #00000018;
     padding: 40px;
     border-radius: 90px;
@@ -62,8 +62,8 @@
 }
 
 #buildConfNav>* {
-    width: calc(30% - 16px);
-    margin: 0 10%;
+    width: calc(33% - 16px);
+    margin: 0 0%;
 }
 
 #build .GUISlot {
@@ -280,4 +280,18 @@
 #build .formbUp:hover,
 #build .formbDown:hover {
     background-color: goldenrod;
+}
+
+#buildEditStats h4 {
+    margin: 0;
+    padding: 0;
+    font-size: .6em;
+}
+
+#buildinfoStats img {
+    height: 25px;
+}
+
+#buildinfoStats td {
+    min-width: 50px;
 }
