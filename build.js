@@ -80,7 +80,8 @@ class Build {
             for (let i = 0; i < mx; i++) {
                 if (keys.includes(col[i])) {
                     x += Math.pow(2, i)
-                    w = Build.NumToLet(map[col[i]], mx <= 9 ? 2 : 3) + w
+                    let val = map[col[i]]
+                    w = (val < 0 ? '-' : '') + Build.NumToLet(Math.abs(val), mx <= 9 ? 2 : 3) + w
                 }
             }
 
@@ -253,7 +254,8 @@ class Build {
                 let x = Math.pow(2, i)
                 if (c >= x) {
                     c -= x
-                    map[col[i]] = mx <= 9 ? get2() : get3()
+                    let amp = is0() ? -1 : 1
+                    map[col[i]] = (mx <= 9 ? get2() : get3()) * amp
                 }
             }
 
@@ -956,45 +958,46 @@ class GUI {
              */
 
             let calcRes = x => {
-                if (x <= 30)
-                    return x
-                x -= 30
+                return Math.ceil((() => {
+                    if (x <= 30)
+                        return x
+                    x -= 30
 
-                if (x <= 30)
-                    return 30 + x * .5
-                x -= 30
+                    if (x <= 30)
+                        return 30 + x * .5
+                    x -= 30
 
-                if (x <= 40)
-                    return 45 + x * .375
-                x -= 40
+                    if (x <= 40)
+                        return 45 + x * .375
+                    x -= 40
 
-                if (x < 50)
-                    return 60 + x * .19
-                if (x == 50)
-                    return 70
-                x -= 50
+                    if (x < 50)
+                        return 60 + x * .19
+                    if (x == 50)
+                        return 70
+                    x -= 50
 
-                if (x <= 50)
-                    return 70 + x * .18
-                x -= 50
+                    if (x <= 50)
+                        return 70 + x * .18
+                    x -= 50
 
-                if (x <= 15)
-                    return 79 + x * .065
-                x -= 15
+                    if (x <= 15)
+                        return 79 + x * .065
+                    x -= 15
 
-                if (x <= 25)
-                    return 80 + x * .04
-                x -= 25
+                    if (x <= 25)
+                        return 80 + x * .04
+                    x -= 25
 
-                if (x <= 10)
-                    return 81 + x * .03
-                x -= 10
+                    if (x <= 10)
+                        return 81 + x * .03
+                    x -= 10
 
-                // 287 - 82,57
-                // 283 - 82,43
-                // ciut mało danych
-                return 81.3 + x * .035
-
+                    // 287 - 82,57
+                    // 283 - 82,43
+                    // ciut mało danych
+                    return 81.3 + x * .035
+                })() * 100) / 100
             }
 
             table.children[0].children[5].innerText = stats['res_siek'] === undefined ? 0 : stats['res_siek']
