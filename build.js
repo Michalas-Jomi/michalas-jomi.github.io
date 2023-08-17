@@ -832,8 +832,11 @@ class GUI {
 
         Build.setPoints(140)
 
+        GUI.show([], {})
+
         if (window.location.search != '')
             Build.load(window.location.search.slice(1))
+
     }
     static _makeEpiks() {
         let fabric = (name, mod) => {
@@ -2616,13 +2619,13 @@ function initData() {
     new GUIItemData('voglery', 'Voglery', 12, 'Rekawice', { waga: 0, wartosc: 0, wym_lvl: 0 })
 
 
-    new GUIItemData('allenor', 'Allenor', 9, 'Bron', {}, true);
-    new GUIItemData('attawa', 'Attawa', 9, 'Bron', {}, true);
-    new GUIItemData('gorthdar', 'Gorthdar', 9, 'Bron', {}, true);
-    new GUIItemData('imisindo', 'Imisindo', 9, 'Bron', {}, true);
-    new GUIItemData('latarnia_zycia', 'Latarnia Życia', 9, 'Bron', {}, true);
-    new GUIItemData('washi', 'Washi', 9, 'Bron', {}, true);
-    new GUIItemData('zmij', 'Żmij', 9, 'Bron', {}, true);
+    new GUIItemData('allenor', 'Allenor', 9, 'Bron', { waga: 10, wartosc: 3000000, wym_klasa: 'rycerz', obr: 100, r_obr: 'sieczne', pz: 250, konda: 50, sila: 15, zreka: 15, wym_lvl: 60 }, true);
+    new GUIItemData('attawa', 'Attawa', 9, 'Bron', { waga: 15, wartosc: 3000000, wym_klasa: 'voodoo', obr: 120, r_obr: 'obuchowe', pz: 100, mana: 50, moc: 15, wiedza: 30, wym_lvl: 60 }, true);
+    new GUIItemData('gorthdar', 'Gorthdar', 9, 'Bron', { waga: 50, wartosc: 3000000, wym_klasa: 'barbarzyńca', obr: 130, r_obr: 'sieczne', pz: 150, konda: 50, sila: 25, zreka: 15, wym_lvl: 60 }, true);
+    new GUIItemData('imisindo', 'Imisindo', 9, 'Bron', { waga: 10, wartosc: 3000000, wym_klasa: 'łucznik', obr: 105, r_obr: 'kłute', pz: 200, konda: 50, sila: 15, zreka: 20, wym_lvl: 60 }, true);
+    new GUIItemData('latarnia_zycia', 'Latarnia Życia', 9, 'Bron', { waga: 15, wartosc: 3000000, wym_klasa: 'druid', obr: 120, r_obr: 'obuchowe', pz: 100, mana: 50, moc: 20, wiedza: 25, wym_lvl: 60 }, true);
+    new GUIItemData('washi', 'Washi', 9, 'Bron', { waga: 10, wartosc: 3000000, wym_klasa: 'sheed', obr: 115, r_obr: 'kłute', pz: 200, konda: 50, sila: 15, zreka: 20, wym_lvl: 60 }, true);
+    new GUIItemData('zmij', 'Żmij', 9, 'Bron', { waga: 15, wartosc: 3000000, wym_klasa: 'mag ognia', obr: 120, r_obr: 'obuchowe', pz: 150, moc: 30, wiedza: 15, wym_lvl: 60 }, true);
 }
 
 
