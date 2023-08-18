@@ -1292,11 +1292,12 @@ class GUIConf {
                     html += color('red', ` (+${Math.ceil(item.upgrades[i] * (['pz', 'mana', 'konda'].includes(i) ? 10 : 1) * GUIConf.editItem.getUpgradeAmplifire())})`)
                 if (i in item.statsChanges)
                     html += color('blue', ` (${item.statsChanges[i] >= 0 ? '+' : ''}${item.statsChanges[i]})`)
+                html += '<span style="margin-left: 5px;"></span>'
                 if (['obr', 'pz', 'mana', 'konda', 'moc', 'wiedza', 'sila', 'zreka'].includes(i))
-                    html += ` <button class="buildUpgradeItem" style="display: none;" onclick="GUIConf.editItem.upgrade('${i}')">${color('red', '+1')}</button>`
+                    html += ` <button class="buildUpgradeItem" style="display: none;" onclick="GUIConf.editItem.upgrade('${i}')">+1</button>`
                 if (i != 'r_obr')
                     for (let x of ['+1', '+10', '-1', '-10'])
-                        html += `<button class="buildModifyItem" onclick="GUIConf.editItem.modifyStat('${i}', ${parseInt(x)})">${color('blue', x)}</button>`
+                        html += `<button class="buildModifyItem" onclick="GUIConf.editItem.modifyStat('${i}', ${parseInt(x)})">${x}</button>`
                 html += '</h4>'
             }
             html += '</div>'

@@ -286,6 +286,7 @@
     margin: 0;
     padding: 0;
     font-size: .6em;
+    position: relative;
 }
 
 #buildinfoStats img {
@@ -294,4 +295,34 @@
 
 #buildinfoStats td {
     min-width: 50px;
+}
+
+#build .buildModifyItem {
+    border-radius: 10px;
+    background-color: rgb(33, 24, 105);
+    color: rgb(231, 210, 210);
+    width: 40px;
+}
+#build .buildModifyItem:hover {
+    background-color: rgb(51, 39, 141);
+}
+
+#build .buildUpgradeItem {
+    border-radius: 10px;
+    background-color: rgb(85, 18, 18);
+    color: rgb(231, 210, 210);
+    width: 40px;
+}
+#build .buildUpgradeItem:hover {
+    background-color: rgb(126, 24, 24);
+}
+
+#build .buildStatsPointsButton {
+    background-color: #666;
+    color: #ddd;
+}
+
+#build .buildStatsPointsButton:hover {
+    background-color: #777;
+    color: #ccc;
 }
