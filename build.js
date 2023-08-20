@@ -1139,7 +1139,7 @@ class GUIConf {
         GUIConf.divs.edit.statsButtons.upgrades.onclick = () => {
             let on = GUIConf.divs.edit.statsButtons.upgrades.style.getPropertyValue('background-color') == 'green'
 
-            GUIConf.divs.edit.statsButtons.upgrades.style.setProperty('background-color', on ? 'red' : 'green')
+            GUIConf.divs.edit.statsButtons.upgrades.style.setProperty('background-color', on ? '#ad2518' : 'green')
 
             for (let el of document.getElementsByClassName('buildUpgradeItem'))
                 el.style.setProperty('display', on ? 'none' : 'unset')
@@ -1147,7 +1147,7 @@ class GUIConf {
         GUIConf.divs.edit.statsButtons.changes.onclick = () => {
             let on = GUIConf.divs.edit.statsButtons.changes.style.getPropertyValue('background-color') == 'green'
 
-            GUIConf.divs.edit.statsButtons.changes.style.setProperty('background-color', on ? 'red' : 'green')
+            GUIConf.divs.edit.statsButtons.changes.style.setProperty('background-color', on ? '#ad2518' : 'green')
 
             for (let el of document.getElementsByClassName('buildModifyItem'))
                 el.style.setProperty('display', on ? 'none' : 'unset')
@@ -1186,7 +1186,7 @@ class GUIConf {
 
         GUI.divs.infoStats.children[0].children[1].onclick = () => {
             let on = GUI.divs.infoStats.children[0].children[1].style.getPropertyValue('background-color') == 'green'
-            GUI.divs.infoStats.children[0].children[1].style.setProperty('background-color', on ? 'red' : 'green')
+            GUI.divs.infoStats.children[0].children[1].style.setProperty('background-color', on ? '#ad2518' : 'green')
 
             for (let el of document.getElementsByClassName('buildStatsPointsButton'))
                 el.style.setProperty('display', on ? 'none' : 'unset')
@@ -1291,9 +1291,9 @@ class GUIConf {
             for (let i of item.data.getStats()) {
                 html += '<h4>' + color('#e4e45b', GUIItemData.statName(i) + ': ') + color('#989898', GUIConf.editItem.getStat(i))
                 if (i in item.upgrades)
-                    html += color('red', ` (+${Math.ceil(item.upgrades[i] * (['pz', 'mana', 'konda'].includes(i) ? 10 : 1) * GUIConf.editItem.getUpgradeAmplifire())})`)
+                    html += color('#ad2518', ` (+${Math.ceil(item.upgrades[i] * (['pz', 'mana', 'konda'].includes(i) ? 10 : 1) * GUIConf.editItem.getUpgradeAmplifire())})`)
                 if (i in item.statsChanges)
-                    html += color('blue', ` (${item.statsChanges[i] >= 0 ? '+' : ''}${item.statsChanges[i]})`)
+                    html += color('#0e52cf', ` (${item.statsChanges[i] >= 0 ? '+' : ''}${item.statsChanges[i]})`)
                 html += '<span style="margin-left: 5px;"></span>'
                 if (['obr', 'pz', 'mana', 'konda', 'moc', 'wiedza', 'sila', 'zreka'].includes(i))
                     html += ` <button class="buildUpgradeItem" style="display: none;" onclick="GUIConf.editItem.upgrade('${i}')">+1</button>`
@@ -1370,7 +1370,7 @@ class GUIConf {
                         </tr>
                         <tr>
                             <td style="font-size: 1rem;">
-                                ${data.fullname} [${romanize(data.rank) /* funkcja romanize z eski.js */}${ulep == 0 ? '' : color('red', '+' + ulep)}]
+                                ${data.fullname} [${romanize(data.rank) /* funkcja romanize z eski.js */}${ulep == 0 ? '' : color('#ad2518', '+' + ulep)}]
                             </td>
                         </tr>
                     </table>

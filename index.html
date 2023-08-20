@@ -66,8 +66,10 @@
         
         #menu {
             position: fixed;
-            top: 10px;
-            left: 5px;
+            left: 0;
+            padding: 10px 5px 0px 5px;
+            border: black dotted 1px;
+            background-color: rgb(70, 70, 70);
         }
         
         #menu>span {
@@ -131,17 +133,21 @@
 
 
         <nav>
-            <div id="menu">
+            <div id="menu" style="top: 0px;">
                 <span value="eski">Eski</span>
                 <span value="skille">Skille</span>
                 <span value="heal">Heal</span>
                 <span value="build">Build</span>
+                <button style="width: 100%">/\</button>
             </div>
 
             <script>
-                let menu = document.getElementById('menu');
+                let menu = document.getElementById('menu')
+
                 Array.from(menu.children).forEach(span => {
                     let id = span.getAttribute('value');
+                    if (id == null)
+                        return
                     span.onclick = () => {
                         Array.from(document.getElementsByClassName('body')).forEach(body => {
                             body.style.setProperty('display', 'none')
@@ -149,6 +155,31 @@
                         document.getElementById(id).style.setProperty('display', 'block');
                     }
                 })
+
+                let state = 'down'
+                let move = (px, mx, finalState) => {
+                    let akt = parseInt(menu.style.getPropertyValue('top'))
+                    if (akt == mx) {
+                        state = finalState
+                        return
+                    }
+                    menu.style.setProperty('top', (akt + px) + 'px')
+                    setTimeout(() => move(px, mx, finalState), 1)
+                }
+                menu.children[menu.children.length - 1].onclick = () => {
+                    if (state == null)
+                        return
+
+                    if (state == 'down') {
+                        move(-1, -208, 'up')
+                        menu.children[menu.children.length - 1].innerHTML = '\\/'
+                    } else {
+                        move(1, 0, 'down')
+                        menu.children[menu.children.length - 1].innerHTML = '/\\'
+                    }
+                    state = null
+                    
+                }
             </script>
         </nav>
 
