@@ -922,6 +922,8 @@ class GUI {
         if (effects !== null) {
             let html = ''
 
+            effects.sort((a, b) => a.data.fullname < b.data.fullname ? -1 : 1)
+
             for (let effect of effects) {
                 html += '<div>'
 

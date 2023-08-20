@@ -297,32 +297,23 @@
     min-width: 50px;
 }
 
-#build .buildModifyItem {
+
+#build .buildModifyItem, #build .buildUpgradeItem {
     border-radius: 10px;
-    background-color: rgb(33, 24, 105);
     color: rgb(231, 210, 210);
     width: 40px;
+    padding: 1px;
+}
+#build .buildModifyItem {
+    background-color: rgb(33, 24, 105);
 }
 #build .buildModifyItem:hover {
     background-color: rgb(51, 39, 141);
 }
 
-#build .buildUpgradeItem {
-    border-radius: 10px;
+#build button.buildUpgradeItem {
     background-color: rgb(85, 18, 18);
-    color: rgb(231, 210, 210);
-    width: 40px;
 }
-#build .buildUpgradeItem:hover {
+#build button.buildUpgradeItem:hover {
     background-color: rgb(126, 24, 24);
-}
-
-#build .buildStatsPointsButton {
-    background-color: #666;
-    color: #ddd;
-}
-
-#build .buildStatsPointsButton:hover {
-    background-color: #777;
-    color: #ccc;
 }
