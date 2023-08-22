@@ -108,6 +108,26 @@
         #heal .healOutputTable {
             border: 3px black solid;
         }
+
+        #procenty {
+            text-align: center;
+        }
+        #procenty table {
+            margin-bottom: 50px;
+        }
+        #procenty table * {
+            border: 1px black solid;
+            padding: 3px;
+            font-size: 1rem;
+        }
+        #procenty input {
+            width: 200px;
+        }
+        #procenty #procentyOutTable td {
+            font-size: 1.3rem;
+            padding: 10px;
+        }
+
     </style>
 
     <title>Broken helper</title>
@@ -135,6 +155,7 @@
         <nav>
             <div id="menu" style="top: 0px;">
                 <span value="eski">Eski</span>
+                <span value="procenty">beta %</span>
                 <span value="skille">Skille</span>
                 <span value="heal">Heal</span>
                 <span value="build">Build</span>
@@ -171,7 +192,7 @@
                         return
 
                     if (state == 'down') {
-                        move(-1, -208, 'up')
+                        move(-1, (menu.children.length - 1) * -52, 'up')
                         menu.children[menu.children.length - 1].innerHTML = '\\/'
                     } else {
                         move(1, 0, 'down')
@@ -201,6 +222,68 @@
                 <script src="eski.js"></script>
 
             </div>
+        </article>
+
+        <article>
+            <div class="body" id="procenty" style="display: none">
+                <center>
+                    <p>
+                        oblicza % trafienia ataków dystansowych i wręcz
+                    </p>
+                    <div id="procentyInputDiv">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Atakujący</th>
+                                    <th>Obrońca</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Lvl</td>
+                                    <td><input value="140" type="Number" id="procentyInpLvLA"></td>
+                                    <td><input value="140" type="Number" id="procentyInpLvLO"></td>
+                                </tr>
+                                <tr>
+                                    <td>wiedza / zręka</td>
+                                    <td><input value="10" type="Number" id="procentyInpStatsA"></td>
+                                    <td><input value="10" type="Number" id="procentyInpStatsO"></td>
+                                </tr>
+                                <tr>
+                                    <td>mod</td>
+                                    <td><input value="100" type="Number" id="procentyInpModA">%</td>
+                                    <td><input value="100" type="Number" id="procentyInpModO">%</td>
+                                </tr>
+                                <tr>
+                                    <td>% umki</td>
+                                    <td><input value="100" type="Number" id="procentyInpSpellA">%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div>
+                        <table id="procentyOutTable">
+                            <thead>
+                                <tr>
+                                    <td>A\O</td>
+                                    <td>0pa</td>
+                                    <td>1pa</td>
+                                    <td>2pa</td>
+                                    <td>3pa</td>
+                                    <td>4pa</td>
+                                    <td>5pa</td>
+                                </tr>
+                            </thead>
+                            <tbody id="procentyOut">
+
+                            </tbody>
+                        </table>
+                    </div>
+                </center>
+            </div>
+            
+            <script src="procenty.js"></script>
         </article>
 
         <article>
