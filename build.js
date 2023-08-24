@@ -959,40 +959,32 @@ class GUI {
 
             let calcRes = x => {
                 return Math.ceil((() => {
-                    if (x <= 30)
-                        return x
+                    if (x <= 30) return x
                     x -= 30
 
-                    if (x <= 30)
-                        return 30 + x * .5
+                    if (x <= 30) return 30 + x * .5
                     x -= 30
 
-                    if (x <= 40)
-                        return 45 + x * .375
+                    if (x <= 40) return 45 + x * .375
                     x -= 40
 
-                    if (x < 50)
-                        return 60 + x * .19
-                    if (x == 50)
-                        return 70
+                    if (x < 50)  return 60 + x * .19
+                    if (x == 50) return 70
                     x -= 50
 
-                    if (x <= 50)
-                        return 70 + x * .18
+                    if (x <= 50) return 70 + x * .18
                     x -= 50
 
-                    if (x <= 15)
-                        return 79 + x * .065
+                    if (x <= 15) return 79 + x * .065
                     x -= 15
 
-                    if (x <= 25)
-                        return 80 + x * .04
+                    if (x <= 25) return 80 + x * .04
                     x -= 25
 
-                    if (x <= 10)
-                        return 81 + x * .03
+                    if (x <= 10) return 81 + x * .03
                     x -= 10
 
+                    // 275 - 82,17
                     // 287 - 82,57
                     // 283 - 82,43
                     // ciut mało danych
@@ -1302,6 +1294,14 @@ class GUIConf {
                         html += `<button class="buildModifyItem" onclick="GUIConf.editItem.modifyStat('${i}', ${parseInt(x)})">${x}</button>`
                 html += '</h4>'
             }
+            html += '<br/>'
+            let sum
+            if ((sum = item.getSumStats()) != 0)
+                html += color('#0e52cf', `<h4>bonusowe staty: ${Math.ceil((item.data.getBonusStats(item.gw) - sum + item.data.getSumStats()) * 10) / 10}</h4>`)
+            if ((sum = item.getSumStatsRes()) != 0)
+                html += color('#0e52cf', `<h4>bonusowe resy: ${Math.ceil((item.data.getBonusStatsRes(item.gw) - sum + item.data.getSumStatsRes()))}</h4>`)
+            if ((sum = item.getSumStatsFiz()) != 0)
+                html += color('#0e52cf', `<h4>bonusowe pancerze: ${Math.ceil((item.data.getBonusStatsFiz(item.gw) - sum + item.data.getSumStatsFiz()))}</h4>`)
             html += '</div>'
 
             
@@ -2255,8 +2255,30 @@ class GUIItem {
         GUIConf.edit(this)
         Build.calculate()
     }
+
+    getSumStats() {
+        let    w = this._getSumStats(['sila', 'zreka', 'moc', 'wiedza'])
+        return w + this._getSumStats(['pz', 'mana', 'konda'], .1)
+    }
+    getSumStatsRes() {
+        return this._getSumStats(['res_ogien', 'res_zimno', 'res_ene', 'res_uro'])
+    }
+    getSumStatsFiz() {
+        return this._getSumStats(['res_siek', 'res_obuch', 'res_klut'])
+    }
+    _getSumStats(lst, amp=1) {
+        let w = 0
+        for (let stat of lst) {
+            let x = this.data.getStat(stat)
+            if (Object.keys(this.statsChanges).includes(stat))
+                x += this.statsChanges[stat]
+            w += x * amp
+        }
+        return w
+    }
 }
 class GUIItemData {
+    static INCRUST_STATS_BOOSTS = [.03, .03, .04, .05, .05, .05, .1, .15]
     static items = {}
     static __id = 0
 
@@ -2341,6 +2363,39 @@ class GUIItemData {
             if (this.getStat(i) !== null)
                 w.push(i)
 
+        return w
+    }
+
+    /**
+     * Liczy dostępne bonusowe statystyki Itemu dla gw gwiazdek
+     * @param {Number} gw 0-8 
+     */
+    getBonusStats(gw)    { return this._getBonusStats(gw, this.getSumStats()) }
+    getBonusStatsRes(gw) { return this._getBonusStats(gw, this.getSumStatsRes()) }
+    getBonusStatsFiz(gw) { return this._getBonusStats(gw, this.getSumStatsFiz()) }
+    _getBonusStats(gw, sum) {
+        let w = 0
+
+        for (let i = 0; i < gw; i++)
+            w += Math.ceil(sum * GUIItemData.INCRUST_STATS_BOOSTS[i] * 10) / 10
+
+        return Math.ceil(w * 10) / 10
+    }
+
+    getSumStats() {
+        let    w = this._getSumStats(['sila', 'zreka', 'moc', 'wiedza'])
+        return w + this._getSumStats(['pz', 'mana', 'konda'], .1)
+    }
+    getSumStatsRes() {
+        return this._getSumStats(['res_ogien', 'res_zimno', 'res_ene', 'res_uro'])
+    }
+    getSumStatsFiz() {
+        return this._getSumStats(['res_siek', 'res_obuch', 'res_klut'])
+    }
+    _getSumStats(lst, amp=1) {
+        let w = 0
+        for (let stat of lst)
+            w += this.getStat(stat) * amp
         return w
     }
 

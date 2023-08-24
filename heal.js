@@ -27,15 +27,15 @@ function heal() {
         <tr>
             <td>${name}</td>
             <td>${Math.ceil(base * x * pre(mod))}</td>
-            <td>${Math.ceil(base * x * pre(mod + roz))}</td>
-            <td>${Math.ceil(base * x * pre(mod + pswc))}</td>
-            <td>${Math.ceil(base * x * pre(mod + roz + pswc))}</td>
+            <td>${Math.ceil(base * x * pre(mod, roz))}</td>
+            <td>${Math.ceil(base * x * pre(mod, pswc))}</td>
+            <td>${Math.ceil(base * x * pre(mod, roz, pswc))}</td>
         <tr>`
 
         out.innerHTML = fabric('Target', trg) + fabric('Grupa', grp)
 
-        let g = Math.ceil(base * grp * pre(mod + roz))
-        let t = Math.ceil(base * trg * pre(mod + roz))
+        let g = Math.ceil(base * grp * pre(mod, roz))
+        let t = Math.ceil(base * trg * pre(mod, roz))
 
         out2.innerHTML = ''
         for (let i = 0; i <= 5; i++) {
@@ -45,14 +45,14 @@ function heal() {
             out2.innerHTML += `<tr>
                     <td>${i}</td>
                     <td>${Math.ceil(g * (1.0 - i1))}</td>
-                    <td>${Math.ceil(t * (1.0 - i1))}</td>
+                    <td>${Math.ceil(                 t * (1.0 - i1))}</td>
                     <td>${Math.ceil(g * (1.9 - i2))}</td>
                     <td>${Math.ceil(g * (1.0 - i1) + t * (.9 - i1))}</td>
-                    <td>${Math.ceil(t * (1.8 - i2))}</td>
+                    <td>${Math.ceil(                 t * (1.8 - i2))}</td>
                     <td>${Math.ceil(g * (2.7 - i3))}</td>
                     <td>${Math.ceil(g * (1.9 - i2) + t * (.8 - i1))}</td>
                     <td>${Math.ceil(g * (1.0 - i1) + t * (1.6 - i2))}</td>
-                    <td>${Math.ceil(t * (2.4 - i3))}</td>
+                    <td>${Math.ceil(                 t * (2.4 - i3))}</td>
                 </tr>`
         }
     }
