@@ -39,6 +39,7 @@ class Build {
 
 
             GUI.show(effects, statsMap)
+            GUI.divs.power.innerHTML = Build._calcPower(effects)
     }
     /**
          * 
@@ -47,13 +48,30 @@ class Build {
     static _calcPower(effects) {
         let power = 0
 
-        // TODO staty, resy itp
-
-        for (let effect of effects) {
-            power += effect.effect / effect.data.amp * Math.pow(effect.data.pow)
+        let stat = (amp, lst) => {
+            for (let el of lst)
+                power += Build.getStat(el) * amp
         }
 
-        return power
+        stat(1,  ['sila','zreka','moc','wiedza'])
+        stat(.1, ['pz','mana','konda'])
+        stat(.4, ['res_klut','res_siek','res_obuch'])
+        stat(.3, ['res_ogien','res_zimno','res_ene'])
+        stat(.6, ['res_uro'])
+
+        if (GUI.eqSlots[0] != undefined && GUI.eqSlots[0].item != null) // ubrana broń
+            power += GUI.eqSlots[0].item.getStat('obr') * 2
+
+        // suma_lvl
+        for (let i = 1; i <= Build.__pointsLvL; i++)
+            power += i / 4
+
+        // suma_mod
+        for (let effect of effects) {
+            power += effect.effect / effect.data.amp * Math.pow(2, effect.data.pow)
+        }
+
+        return Math.ceil(power)
     }
 
     /**
@@ -488,11 +506,10 @@ class Build {
     static getStat(name) {
         return Build._getStat(name, (i, children) => {
                 if (i != -1)
-                return parseInt(children[2].innerText)
+                    return parseInt(children[2].innerText)
             i = ['res_siek', 'res_obuch', 'res_klut', 'res_ogien', 'res_zimno', 'res_ene', 'res_uro'].indexOf(name)
-            return parseInt(children[5].innerText)
+            return parseInt(children[i].children[5].innerText)
         })
-        
     }
     /**
      * zczytuje aktualną bazową statystyke z div#buildinfoStats
@@ -504,6 +521,8 @@ class Build {
     }
     static _getStat(name, func) {
         let i = ['pz', 'mana', 'konda', 'sila', 'zreka', 'moc', 'wiedza'].indexOf(name)
+        if (i == -1)
+            return func(i, GUI.divs.infoStats.children[1].children[0].children)
         let children = GUI.divs.infoStats.children[1].children[0].children[i].children
         return func(i, children)
 
@@ -816,6 +835,8 @@ class GUI {
         infoDriffs: document.getElementById('buildinfoDriffs'),
 
         statsPoints: document.getElementById('buildStatsPoints'),
+
+        power: document.getElementById('buildPower'),
     }
 
     /** @type {Array<GUISlot>} */         static eqSlots = []
@@ -1434,6 +1455,7 @@ class GUISlot {
      */
     constructor(type) {
         this.type = type
+        /** @type {GUIItem} */
         this.item = null
 
         this.container = document.createElement('div')
