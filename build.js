@@ -931,7 +931,7 @@ class GUI {
                 html += color('lightblue', `${effect.data.fullname} `)
                 html += color('lightblue', `${Math.round(effect.effect*100)/100}% `)
                 if (effect.count > 3)
-                    html += color('white', `(suma ${effect.rawEffect}%)`)
+                    html += color('white', `(suma ${Math.round(effect.rawEffect*100)/100}%)`)
 
                 html += '</div>'
             }
