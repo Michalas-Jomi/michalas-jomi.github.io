@@ -84,6 +84,9 @@ class Skills {
                 let t = parseInt(label.getAttribute('value')[1])
 
                 used += refactor(lvl, t);
+                
+                if (label.parentNode.parentNode.getAttribute('value').match(/s\d/) != null)
+                    used -= 1
             }
         });
 
