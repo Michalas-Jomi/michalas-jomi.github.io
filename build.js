@@ -6,23 +6,31 @@ class Build {
             let effects = []
 
             // zbieranie danych
+            let addEffect = (fullname, effect) => {
+                if (fullname in driffsMap)
+                        driffsMap[fullname] += effect
+                    else
+                        driffsMap[fullname] = effect
+
+                    if (fullname in driffsCounter)
+                        driffsCounter[fullname] += 1
+                    else
+                        driffsCounter[fullname] = 1
+            }
             for (let slot of GUI.eqSlots)
                 if (slot.item != null) {
-                    for (let driffSlot of slot.item.driffs) {
-                        let driff = driffSlot.driff
-                        if (driff == null)
-                            continue
+                    if (slot.item.data.syng) {
+                        let effect = slot.item.getEffect()
+                        if (effect != null)
+                            addEffect(effect.data.fullname, effect.rawEffect)
+                    } else
+                        for (let driffSlot of slot.item.driffs) {
+                            let driff = driffSlot.driff
+                            if (driff == null)
+                                continue
 
-                        if (driff.data.fullname in driffsMap)
-                            driffsMap[driff.data.fullname] += driff.effekt()
-                        else
-                            driffsMap[driff.data.fullname] = driff.effekt()
-
-                        if (driff.data.fullname in driffsCounter)
-                            driffsCounter[driff.data.fullname] += 1
-                        else
-                            driffsCounter[driff.data.fullname] = 1
-                    }
+                            addEffect(driff.data.fullname, driff.effekt())
+                        }
                     for (let stat of slot.item.data.getStats()) {
                         if (stat == 'r_obr' || stat == 'obr')
                             continue
@@ -126,21 +134,33 @@ class Build {
             return NumToLet(x, mx <= 9 ? 2 : 4) + w
         }
 
-        /** @param item {GUIItem} */
+        /** @param item {GUIItemRar} */
         let saveItem = item => {
             if (item == null)
                 return '-'
 
             let w = NumToLet(item.data.id, 2)
 
-            w += NumToLet(item.gw, 1)
+            if (item.data.syng) {
+                let effect = item.getEffect()
+                if (effect == null)
+                    w += '-'
+                else
+                    w += NumToLet(effect.data.id, 2)
+                w += NumToLet(item.tier, 1)
+            } else
+                w += NumToLet(item.gw, 1)
 
             w += saveStatsMap(item.upgrades, 8)
             w += saveStatsMap(item.statsChanges, 15)
 
-            w += NumToLet(item.driffs.length, 1)
-            for (let driff of item.driffs)
-                w += saveDriff(driff.driff)
+            if (item.driffs == undefined)
+                w += NumToLet(0, 1)
+            else {
+                w += NumToLet(item.driffs.length, 1)
+                for (let driff of item.driffs)
+                    w += saveDriff(driff.driff)
+            }
 
             return w
         }
@@ -286,9 +306,9 @@ class Build {
 
             let data = GUIItemData.fromId(get2())
 
-            let item = new GUIItem(data)
+            let item = GUIItem.make(data)
 
-            let slots = GUIItem.caps[data.rank][1]
+            let slots = GUIItemRar.caps[data.rank][1]
             for (let i = 0; i < slots; i++)
                 item.driffs[i].setDriff(loadDriff(item.driffs[i]))
 
@@ -320,9 +340,21 @@ class Build {
             let data = GUIItemData.fromId(get2())
 
 
-            let item = new GUIItem(data)
+            let item = GUIItem.make(data)
+            
+            if (item.data.syng) {
+                let modData = is0() ? null : DriffData.fromId(get2())
+                let tier = get1()
 
-            item.gw = get1()
+                item.tier = tier
+                if (modData == null)
+                    item.inpMod.value = ''
+                else
+                    item.inpMod.value = modData.fullname
+
+            } else
+                 item.gw = get1()
+
             item.upgrades = loadStatsMap(8)
             item.statsChanges = loadStatsMap(15)
 
@@ -432,7 +464,7 @@ class Build {
             let dataType = map.a
             let dataName = map.b
 
-            let item = new GUIItem(GUIItemData.getData(dataType, dataName))
+            let item = GUIItem.make(GUIItemData.getData(dataType, dataName))
             for (let i = 0; i < map.c.length; i++)
                 item.driffs[i].setDriff(loadDriff(map.c[i], item.driffs[i]))
 
@@ -704,6 +736,9 @@ class Driff {
      * @param {number} tier 
      */
     constructor(data, slot, lvl = 1, tier = 1) {
+        if (data == null)
+            throw TypeError(`new Driff(null) data != null`)
+
         this.data = data
         this.slot = slot
         this.tier = parseInt(tier)
@@ -786,7 +821,6 @@ class Driff {
 
         return this.data.amp * x
     }
-
 }
 
 class Effect {
@@ -869,15 +903,9 @@ class GUI {
     }
     static _makeEpiks() {
         let i = GUI.invSlots.length - 1
-
-        for (let name_mod of [['allenor', 'astah'], ['attawa', 'oda'], ['gorthdar', 'unn'], ['imisindo', 'ling'], ['latarnia_zycia', 'Err'], ['washi', 'ulk'], ['zmij', 'teld']]) {
-            let item = new GUIItem(GUIItemData.getData('Bron', name_mod[0]))
-
-            item.driffs[0].setDriff(new Driff(DriffData.fromName('band'), item.driffs[0], 1, 3))
-            item.driffs[1].setDriff(new Driff(DriffData.fromName(name_mod[1]), item.driffs[1], 1, 3))
-
-            GUI.invSlots[i--].insertItem(item)
-        }
+        
+        for (let name of ['allenor', 'attawa', 'gorthdar', 'imisindo', 'latarnia_zycia', 'washi', 'zmij']) 
+            GUI.invSlots[i--].insertItem(new GUIItemEpik(GUIItemData.getData('Bron', name)))
     }
 
     /**
@@ -905,7 +933,7 @@ class GUI {
     }
 
     /**
-     * @param {GUIItem} item 
+     * @param {GUIItemRar} item 
      */
     static addToInv(item) {
         for (let i = 0; i < GUI.invSlots.length; i++) {
@@ -1033,7 +1061,7 @@ class GUI {
 }
 
 class GUIConf {
-    /** @type {GUIItem} */         static editItem = null
+    /** @type {GUIItemRar} */         static editItem = null
     /** @type {GUIInvDriffSlot} */ static editDriff = null
     static divs = {
         save: {
@@ -1231,7 +1259,7 @@ class GUIConf {
             head.appendChild(icon)
             bodies.appendChild(body)
 
-            icon.onclick = ev => {
+            icon.onclick = () => {
                 for (let b of bodies.children)
                     b.style.setProperty('display', 'none')
                 body.style.setProperty('display', 'block')
@@ -1240,7 +1268,7 @@ class GUIConf {
             for (let itemData of GUIItemData.items[type]) {
                 if (itemData.epik)
                     continue
-                let item = new GUIItem(itemData)
+                let item = GUIItem.make(itemData)
                 let slot = new GUISlot(null)
                 slot.container.onclick = null
 
@@ -1248,8 +1276,8 @@ class GUIConf {
 
                 body.appendChild(slot.get())
 
-                item.container.onclick = ev => {
-                    let item = new GUIItem(itemData)
+                item.container.onclick = () => {
+                    let item = GUIItem.make(itemData)
                     GUIConf.closeSelect()
                     GUI.addToInv(item)
                     GUIConf.edit(item)
@@ -1290,44 +1318,11 @@ class GUIConf {
             item.slot.setActive(true)
 
             /// Driffs
-            GUIConf.divs.edit.driffs.innerHTML = ''
-            for (let driff of item.driffs)
-                GUIConf.divs.edit.driffs.appendChild(driff.getForm())
-
+            item.setEditFormHTMLDriffs(GUIConf.divs.edit.driffs)
 
             /// Stats
-            let html = '<div>'
-            for (let i of item.data.getStatsUp())
-                if (i != 'wartosc' && i != 'waga')
-                    html += '<h4>' + color('#dfdf94', GUIItemData.statName(i) + ': ') + color('#989898', GUIConf.editItem.getStat(i)) + '</h4>'
-            html += '</br>'
-            for (let i of item.data.getStats()) {
-                html += '<h4>' + color('#e4e45b', GUIItemData.statName(i) + ': ') + color('#989898', GUIConf.editItem.getStat(i))
-                if (i in item.upgrades)
-                    html += color('#ad2518', ` (+${Math.ceil(item.upgrades[i] * (['pz', 'mana', 'konda'].includes(i) ? 10 : 1) * GUIConf.editItem.getUpgradeAmplifire())})`)
-                if (i in item.statsChanges)
-                    html += color('#0e52cf', ` (${item.statsChanges[i] >= 0 ? '+' : ''}${item.statsChanges[i]})`)
-                html += '<span style="margin-left: 5px;"></span>'
-                if (['obr', 'pz', 'mana', 'konda', 'moc', 'wiedza', 'sila', 'zreka'].includes(i))
-                    html += ` <button class="buildUpgradeItem" style="display: none;" onclick="GUIConf.editItem.upgrade('${i}')">+1</button>`
-                if (i != 'r_obr')
-                    for (let x of ['+1', '+10', '-1', '-10'])
-                        html += `<button class="buildModifyItem" onclick="GUIConf.editItem.modifyStat('${i}', ${parseInt(x)})">${x}</button>`
-                html += '</h4>'
-            }
-            html += '<br/>'
-            let sum
-            if ((sum = item.getSumStats()) != 0)
-                html += color('#0e52cf', `<h4>bonusowe staty: ${Math.ceil((item.data.getBonusStats(item.gw) - sum + item.data.getSumStats()) * 10) / 10}</h4>`)
-            if ((sum = item.getSumStatsRes()) != 0)
-                html += color('#0e52cf', `<h4>bonusowe resy: ${Math.ceil((item.data.getBonusStatsRes(item.gw) - sum + item.data.getSumStatsRes()))}</h4>`)
-            if ((sum = item.getSumStatsFiz()) != 0)
-                html += color('#0e52cf', `<h4>bonusowe pancerze: ${Math.ceil((item.data.getBonusStatsFiz(item.gw) - sum + item.data.getSumStatsFiz()))}</h4>`)
-            html += '</div>'
-
+            item.setEditFormHTMLStats(GUIConf.divs.edit.stats)
             
-
-            GUIConf.divs.edit.stats.innerHTML = html
 
             GUIConf.divs.edit.statsButtons.changes.onclick()
             GUIConf.divs.edit.statsButtons.changes.onclick()
@@ -1379,41 +1374,53 @@ class GUIConf {
                     <table>
                         <tr>
                             <td rowspan="2">
-                                <img src='${data.getImgSrc()}'>
+                                <img src='${GUIConf.editItem.getImgSrc()}'>
                             </td>
-                            <td style="text-align: center;">
-                                ${GUIConf.editItem.getGwGUI().outerHTML}
+                            <td style="text-align: center;">`
+            if (GUIConf.editItem.constructor.INCRUSTABLE)
+                html +=        `${GUIConf.editItem.getGwGUI().outerHTML}
                                 <span class="buildUpgradeItem" style="display: none;">
                                     <button onclick="GUIConf.editItem.incrust(1)">+</button>
                                     <button onclick="GUIConf.editItem.incrust(-1)">-</button>
-                                </span>
-                            </td>
+                                </span>`
+            html +=        `</td>
                         </tr>
                         <tr>
                             <td style="font-size: 1rem;">
-                                ${data.fullname} [${romanize(data.rank) /* funkcja romanize z eski.js */}${ulep == 0 ? '' : color('#ad2518', '+' + ulep)}]
+                                ${GUIConf.editItem.getName()} [${romanize(GUIConf.editItem.getRank()) /* funkcja romanize z eski.js */}${ulep == 0 ? '' : color('#ad2518', '+' + ulep)}]
                             </td>
                         </tr>
                     </table>
-                </h2>
-                <span class="buildEditInfoDriffsInfo" style="display: ${GUIConf.driffsHidden() ? 'none' : 'block'};">
-                <h3>Pojemność: ${GUIConf.editItem.calcPower()}/${GUIConf.editItem.maxPower}</h3>
-                `
-            for (let i = 0; i < GUIConf.editItem.driffs.length; i++) {
-                let driff = GUIConf.editItem.driffs[i]
-                let text
-                if (driff.driff == null)
-                    text = 'Brak'
-                else {
-                    text = ['Subdrif', 'Bidrif', 'Magnidrif', 'ArcyDrif'][driff.driff.tier - 1]
-                    text += ` ${driff.driff.data.name}`
-                    text = color('lightblue', text)
-                    text += color('white', ` [${driff.driff.lvl}]`)
-                    text = `<span style="position: relative; with: 26px; height: 26px;">${driff.driff.getGUI().innerHTML}</span><span style="margin-right: 28px;"></span>` + text
+                </h2>`
+            html += `<span class="buildEditInfoDriffsInfo" style="display: ${GUIConf.driffsHidden() ? 'none' : 'block'};">`
+            
+            if (data.syng) {
+                let effect = GUIConf.editItem.getEffect()
+                if (effect == null)
+                    html += '<h3>' + color('red', 'nieprawidłowy mod') + '</h3>'
+                else
+                    html += '<h3>' + color('lightblue', `${effect.data.fullname} ${effect.rawEffect}%`) + '</h3>'
+            }
+            if (!data.syng && !data.epik)
+                html += `<h3>Pojemność: ${GUIConf.editItem.calcPower()}/${GUIConf.editItem.maxPower}</h3>`
+            if (GUIConf.editItem.driffs != null)
+                for (let i = 0; i < GUIConf.editItem.driffs.length; i++) {
+                    let driff = GUIConf.editItem.driffs[i]
+                    let text
+                    if (driff.driff == null)
+                        text = 'Brak'
+                    else {
+                        text = ['Subdrif', 'Bidrif', 'Magnidrif', 'ArcyDrif'][driff.driff.tier - 1]
+                        text += ` ${driff.driff.data.name}`
+                        text = color('lightblue', text)
+                        text += color('white', ` [${driff.driff.lvl}]`)
+                        text = `<span style="position: relative; with: 26px; height: 26px;">${driff.driff.getGUI().innerHTML}</span><span style="margin-right: 28px;"></span>` + text
+                    }
+
+                    html += `<h3>Slot ${i+1}: ${text} </h3>`
                 }
 
-                html += `<h3>Slot ${i+1}: ${text} </h3>`
-            }
+            html += '</span>'
 
         } else if (GUIConf.editDriff != null) {
             let driff = GUIConf.editDriff.driff
@@ -1455,7 +1462,7 @@ class GUISlot {
      */
     constructor(type) {
         this.type = type
-        /** @type {GUIItem} */
+        /** @type {GUIItemRar} */
         this.item = null
 
         this.container = document.createElement('div')
@@ -1514,7 +1521,7 @@ class GUISlot {
     }
 
     /**
-     * @param {GUIItem} item 
+     * @param {GUIItemRar} item 
      * @returns {Boolean}
      */
     insertItem(item) {
@@ -1547,7 +1554,8 @@ class GUISlot {
             this.item.slot = this
             this.body.innerHTML = ''
             this.body.appendChild(item.get())
-            this.item.refreshGUIDriffs()
+            if (this.item.refreshGUIDriffs != undefined)
+                this.item.refreshGUIDriffs()
         }
 
         if (this.isEq())
@@ -1566,7 +1574,7 @@ class GUISlot {
 }
 class GUIDriffSlot {
     /**
-     * @param {GUIItem} item 
+     * @param {GUIItemRar} item 
      */
     constructor(item) {
         this.container = document.createElement('div')
@@ -1960,47 +1968,36 @@ class GUIInvDriffSlot {
 }
 
 class GUIItem {
-    // rank : cap, slots
-    static caps = {
-        2: [4, 1],
-        3: [4, 1],
-        4: [8, 2],
-        5: [10, 2],
-        6: [12, 2],
-        7: [15, 2],
-        8: [18, 2],
-        9: [21, 2],
-        10: [24, 3],
-        11: [28, 3],
-        12: [32, 3],
+    static INCRUSTABLE = false
+    /**
+     * 
+     * @param {GUIItemData} data 
+     * @param  {...any} args 
+     * @returns {GUIItem}
+     */
+    static make(data) {
+        if (data.epik)
+            return new GUIItemEpik(data)
+        if (data.syng)
+            return new GUIItemSyng(data)
+        return new GUIItemRar(data)
     }
 
     /**
      * @param {GUIItemData} data 
      */
     constructor(data) {
-        let cap = GUIItem.caps[data.rank]
-
-        this.gw = 0
+        if (data == null)
+            throw TypeError(`new GUIItem(null) data != null`)
         this.data = data
+        /** @type {GUISlot} */
         this.slot = null
-        this.driffs = []
         this.upgrades = {}
-        this.maxPower = cap[0]
         this.statsChanges = {}
 
         this._buildView()
 
-        for (let i = 0; i < cap[1]; i++) {
-            let driff = new GUIDriffSlot(this)
-            this.driffs.push(driff)
-            this.body.appendChild(driff.get())
-        }
-
-        this.setUpGUIDriffsSlots()
-
-
-        this.container.onclick = ev => GUIConf.edit(this)
+        this.container.onclick = () => GUIConf.edit(this)
     }
     _buildView() {
         this.container = document.createElement('div')
@@ -2011,29 +2008,97 @@ class GUIItem {
         this.container.appendChild(this.head)
         this.container.appendChild(this.body)
 
-        this.setIcon(this.data.getImgSrc())
+        this.setIcon(this.getImgSrc())
+    }
+    
+
+    /**
+     * zwraca nazwę itemu do wyświetlenia
+     * @returns {String}
+     */
+    getName() {
+        return this.data.fullname
+    }
+    /**
+     * zwraca rangę itemu
+     * @returns {Number}
+     */
+    getRank() {
+        return this.data.rank
+    }
+    /**
+     * zwraca ścieżkę do ikonki itemku
+     * @returns {String}
+     */
+    getImgSrc() {
+        return this.data.getImgSrc()
     }
 
     /**
-     * Rozmieszcza sloty dirffów
+     * @returns {HTMLSpanElement }
      */
-    setUpGUIDriffsSlots() {
-        switch (this.driffs.length) {
-            case 1:
-                this.driffs[0].container.style.setProperty('left', '30px')
-                break
-            case 2:
-                this.driffs[0].container.style.setProperty('left', '11px')
-                this.driffs[1].container.style.setProperty('left', '49px')
-                break
-            case 3:
-                this.driffs[0].container.style.setProperty('left', '0px')
-                this.driffs[1].container.style.setProperty('left', '30px')
-                this.driffs[2].container.style.setProperty('left', '60px')
-                break
-        }
+    get() {
+        return this.container
     }
 
+    /**
+     * @param {String} src 
+     */
+    setIcon(src) {
+        this.head.innerHTML = ''
+
+        let img = document.createElement('div')
+        img.setAttribute('class', 'GUIItemImg')
+
+        img.style.setProperty('background-image', `url('${src}')`)
+
+        let span = document.createElement('span')
+        span.setAttribute('class', 'buildItemImgName')
+        span.innerText = this.getName()
+
+        img.appendChild(span)
+        this.head.appendChild(img)
+    }
+
+    setEditFormHTMLDriffs(div) {
+        div.innerHTML = ''
+    }
+    setEditFormHTMLStats(div) {
+        let html = '<div>'
+            for (let i of this.data.getStatsUp())
+                if (i != 'wartosc' && i != 'waga')
+                    html += '<h4>' + color('#dfdf94', GUIItemData.statName(i) + ': ') + color('#989898', this.getStat(i)) + '</h4>'
+            html += '</br>'
+            for (let i of this.data.getStats()) {
+                html += '<h4>' + color('#e4e45b', GUIItemData.statName(i) + ': ') + color('#989898', this.getStat(i))
+                if (i in this.upgrades)
+                    html += color('#ad2518', ` (+${Math.ceil(this.upgrades[i] * (['pz', 'mana', 'konda'].includes(i) ? 10 : 1) * this.getUpgradeAmplifire())})`)
+                if (i in this.statsChanges)
+                    html += color('#0e52cf', ` (${this.statsChanges[i] >= 0 ? '+' : ''}${this.statsChanges[i]})`)
+                html += '<span style="margin-left: 5px;"></span>'
+                if (['obr', 'pz', 'mana', 'konda', 'moc', 'wiedza', 'sila', 'zreka'].includes(i))
+                    html += ` <button class="buildUpgradeItem" style="display: none;" onclick="GUIConf.editItem.upgrade('${i}')">+1</button>`
+                if (i != 'r_obr')
+                    for (let x of ['+1', '+10', '-1', '-10'])
+                        html += `<button class="buildModifyItem" onclick="GUIConf.editItem.modifyStat('${i}', ${parseInt(x)})">${x}</button>`
+                html += '</h4>'
+            }
+            if (this.gw != undefined) {
+                html += '<br/>'
+                let sum
+                if ((sum = this.getSumStats()) != 0)
+                    html += color('#0e52cf', `<h4>bonusowe staty: ${Math.ceil((this.data.getBonusStats(this.gw) - sum + this.data.getSumStats()) * 10) / 10}</h4>`)
+                if ((sum = this.getSumStatsRes()) != 0)
+                    html += color('#0e52cf', `<h4>bonusowe resy: ${Math.ceil((this.data.getBonusStatsRes(this.gw) - sum + this.data.getSumStatsRes()))}</h4>`)
+                if ((sum = this.getSumStatsFiz()) != 0)
+                    html += color('#0e52cf', `<h4>bonusowe pancerze: ${Math.ceil((this.data.getBonusStatsFiz(this.gw) - sum + this.data.getSumStatsFiz()))}</h4>`)
+            }
+            html += '</div>'
+        
+        div.innerHTML = html
+    }
+
+    
     /**
      * zwraca końcową wartość statystki
      * @param {string} stat 
@@ -2046,7 +2111,7 @@ class GUIItem {
         let amp = ['pz', 'mana', 'konda'].includes(stat) ? 10 : 1
 
         if (stat == 'obr')
-            w *= [0, .015, .03, .05, .075, .1, .125, .175, .25][this.gw] * (this.data.epik ? 2 : 1) + 1
+            w *= [0, .015, .03, .05, .075, .1, .125, .175, .25][this.gw == undefined ? 0 : this.gw] * (this.data.epik ? 2 : 1) + 1
 
         return Math.ceil(
             w +
@@ -2099,124 +2164,11 @@ class GUIItem {
         return 9 + sum / 4
     }
 
-    /**
-     * zwraca zajętą pojemność
-     * @returns {number}
-     */
-    calcPower() {
-        let pow = 0
-
-        for (let driff of this.driffs)
-            if (driff.driff != null)
-                pow += driff.driff.power()
-
-        return pow
-    }
-    /**
-     * zwraca true jeśli suma poweru driffów przekracza pojemność itemu
-     * @returns {Boolean}
-     */
-    overPower() {
-        return this.calcPower() > this.maxPower
-    }
-    /**
-     * prezlicza ponownie pojemność itemku
-     */
-    refreshMaxPower() {
-        this.maxPower = GUIItem.caps[this.data.rank][0]
-        if (this.gw > 5) {
-            this.maxPower += [1, 2, 4][this.gw - 6]
-            if (this.data.rank < 4) {
-                if (this.driffs.length < 2) {
-                    let driff = new GUIDriffSlot(this)
-                    this.driffs.push(driff)
-                    this.body.appendChild(driff.get())
-                    this.setUpGUIDriffsSlots()
-                } else if (this.overPower()) {
-                    this.driffs[1].inpEx.onclick()
-                }
-            }
-            GUIConf.setInfo()
-        } else if (this.data.rank < 4 && this.driffs.length > 1) {
-            let driff = this.driffs.pop()
-            driff.inpEx.onclick()
-            if (driff.container.parentNode != null)
-                driff.container.parentNode.removeChild(driff.container)
-            this.setUpGUIDriffsSlots()
-            GUIConf.setInfo()
-        }
-    }
-
-    /**
-     * @returns {HTMLSpanElement }
-     */
-    get() {
-        return this.container
-    }
-
-    /**
-     * @param {String} src 
-     */
-    setIcon(src) {
-        this.head.innerHTML = ''
-
-        let img = document.createElement('div')
-        img.setAttribute('class', 'GUIItemImg')
-
-        img.style.setProperty('background-image', `url('${src}')`)
-
-        let span = document.createElement('span')
-        span.setAttribute('class', 'buildItemImgName')
-        span.innerText = this.data.fullname
-
-        img.appendChild(span)
-        this.head.appendChild(img)
-    }
-
-    /**
-     * Odświeża wygląd slotów driffów
-     */
-    refreshGUIDriffs() {
-        for (let driff of this.driffs)
-            driff.refreshGUI()
-    }
-
-    /**
-     * Zwraca span z img gwiazdek
-     * @returns {HTMLSpanElement}
-     */
-    getGwGUI() {
-        let span = document.createElement('span')
-
-        let tier = parseInt(this.gw / 3) + 1
-        let count = this.gw % 3 + 1
-
-        for (let i = 0; i < count; i++)
-            span.innerHTML += `<img src="icons/gw${tier}.png" alt="gwT${tier}">`
-
-        return span
-    }
-
-    /**
-     * zwraca bonus do efektu driffów
-     * @returns {Number}
-     */
-    getDriffAmplifire() {
-        let base = this.data.epik ? 1.6 : 1
-        if (this.gw < 6)
-            return base
-        return [.03, .08, .15][this.gw - 6] + base
-    }
-    /**
-     * zwraca bonus do ulepszeń
-     * @returns {Number}
-     */
     getUpgradeAmplifire() {
-        if (this.gw < 3)
-            return 1
-        return [1.1, 1.15, 1.25, 1.5, 1.8, 2][this.gw - 3]
+        return 1
     }
 
+    
     /**
      * Ulepsza item o 1 poziom w góre w daną statystyke
      * @param {String} stat 
@@ -2260,24 +2212,7 @@ class GUIItem {
         GUIConf.edit(this)
         Build.calculate()
     }
-    /**
-     * inkrustuje (1) lub deinkrustuje (-1) item
-     * @param {Number} x 1 / -1 
-     */
-    incrust(x) {
-        this.gw += x
-        if (this.gw < 0 || this.gw > 8) {
-            this.gw -= x
-            Info.showMessage('Limit inkrustacji osiągnięty')
-            return
-        }
-
-        this.refreshMaxPower()
-
-        GUIConf.edit(this)
-        Build.calculate()
-    }
-
+    
     getSumStats() {
         let    w = this._getSumStats(['sila', 'zreka', 'moc', 'wiedza'])
         return w + this._getSumStats(['pz', 'mana', 'konda'], .1)
@@ -2299,6 +2234,329 @@ class GUIItem {
         return w
     }
 }
+class GUIItemRar extends GUIItem {
+    static INCRUSTABLE = true
+    // rank : cap, slots
+    static caps = {
+        2: [4, 1],
+        3: [4, 1],
+        4: [8, 2],
+        5: [10, 2],
+        6: [12, 2],
+        7: [15, 2],
+        8: [18, 2],
+        9: [21, 2],
+        10: [24, 3],
+        11: [28, 3],
+        12: [32, 3],
+    }
+
+    /**
+     * @param {GUIItemData} data 
+     */
+    constructor(data) {
+        super(data)
+        
+        let cap = GUIItemRar.caps[data.rank]
+
+        this.gw = 0
+        this.driffs = []
+        this.maxPower = cap[0]
+
+        for (let i = 0; i < cap[1]; i++) {
+            let driff = new GUIDriffSlot(this)
+            this.driffs.push(driff)
+            this.body.appendChild(driff.get())
+        }
+
+        this.setUpGUIDriffsSlots()
+    }
+
+    /**
+     * Rozmieszcza sloty dirffów
+     */
+    setUpGUIDriffsSlots() {
+        switch (this.driffs.length) {
+            case 1:
+                this.driffs[0].container.style.setProperty('left', '30px')
+                break
+            case 2:
+                this.driffs[0].container.style.setProperty('left', '11px')
+                this.driffs[1].container.style.setProperty('left', '49px')
+                break
+            case 3:
+                this.driffs[0].container.style.setProperty('left', '0px')
+                this.driffs[1].container.style.setProperty('left', '30px')
+                this.driffs[2].container.style.setProperty('left', '60px')
+                break
+        }
+    }
+
+    /**
+     * zwraca zajętą pojemność
+     * @returns {number}
+     */
+    calcPower() {
+        let pow = 0
+
+        for (let driff of this.driffs)
+            if (driff.driff != null)
+                pow += driff.driff.power()
+
+        return pow
+    }
+    /**
+     * zwraca true jeśli suma poweru driffów przekracza pojemność itemu
+     * @returns {Boolean}
+     */
+    overPower() {
+        return this.calcPower() > this.maxPower
+    }
+    /**
+     * prezlicza ponownie pojemność itemku
+     */
+    refreshMaxPower() {
+        this.maxPower = GUIItemRar.caps[this.data.rank][0]
+        if (this.gw > 5) {
+            this.maxPower += [1, 2, 4][this.gw - 6]
+            if (this.data.rank < 4) {
+                if (this.driffs.length < 2) {
+                    let driff = new GUIDriffSlot(this)
+                    this.driffs.push(driff)
+                    this.body.appendChild(driff.get())
+                    this.setUpGUIDriffsSlots()
+                } else if (this.overPower()) {
+                    this.driffs[1].inpEx.onclick()
+                }
+            }
+            GUIConf.setInfo()
+        } else if (this.data.rank < 4 && this.driffs.length > 1) {
+            let driff = this.driffs.pop()
+            driff.inpEx.onclick()
+            if (driff.container.parentNode != null)
+                driff.container.parentNode.removeChild(driff.container)
+            this.setUpGUIDriffsSlots()
+            GUIConf.setInfo()
+        }
+    }
+
+    /**
+     * Odświeża wygląd slotów driffów
+     */
+    refreshGUIDriffs() {
+        for (let driff of this.driffs)
+            driff.refreshGUI()
+    }
+
+    /**
+     * Zwraca span z img gwiazdek
+     * @returns {HTMLSpanElement}
+     */
+    getGwGUI() {
+        let span = document.createElement('span')
+
+        let tier = parseInt(this.gw / 3) + 1
+        let count = this.gw % 3 + 1
+
+        for (let i = 0; i < count; i++)
+            span.innerHTML += `<img src="icons/gw${tier}.png" alt="gwT${tier}">`
+
+        return span
+    }
+
+    /**
+     * zwraca bonus do efektu driffów
+     * @returns {Number}
+     */
+    getDriffAmplifire() {
+        if (this.gw < 6)
+            return 1
+        return [.03, .08, .15][this.gw - 6] + 1
+    }
+    /**
+     * zwraca bonus do ulepszeń
+     * @returns {Number}
+     */
+    getUpgradeAmplifire() {
+        if (this.gw < 3)
+            return 1
+        return [1.1, 1.15, 1.25, 1.5, 1.8, 2][this.gw - 3]
+    }
+
+    /**
+     * inkrustuje (1) lub deinkrustuje (-1) item
+     * @param {Number} x 1 / -1 
+     */
+    incrust(x) {
+        this.gw += x
+        if (this.gw < 0 || this.gw > 8) {
+            this.gw -= x
+            Info.showMessage('Limit inkrustacji osiągnięty')
+            return
+        }
+
+        this.refreshMaxPower()
+
+        GUIConf.edit(this)
+        Build.calculate()
+    }
+
+    setEditFormHTMLDriffs(div) {
+        super.setEditFormHTMLDriffs(div)
+        for (let driff of this.driffs)
+            div.appendChild(driff.getForm())
+    }
+}
+class GUIItemEpik extends GUIItemRar {
+    static SECOND_MOD = {}
+
+    /**
+     * @param {GUIItemData} data 
+     * @param {String} mod 
+     */
+    constructor(data) {
+        super(data)
+
+        if (!data.epik)
+            throw TypeError(`class GUIItemEpik przyjmuje tylko GUIItemData(epik=true)`)
+
+        if (Object.keys(GUIItemEpik.SECOND_MOD).length == 0) {
+            GUIItemEpik.SECOND_MOD['allenor'] = DriffData.fromName('astah')
+            GUIItemEpik.SECOND_MOD['attawa'] = DriffData.fromName('oda')
+            GUIItemEpik.SECOND_MOD['gorthdar'] = DriffData.fromName('unn')
+            GUIItemEpik.SECOND_MOD['imisindo'] = DriffData.fromName('ling')
+            GUIItemEpik.SECOND_MOD['latarnia_zycia'] = DriffData.fromName('Err')
+            GUIItemEpik.SECOND_MOD['washi'] = DriffData.fromName('ulk')
+            GUIItemEpik.SECOND_MOD['zmij'] = DriffData.fromName('teld')
+        }
+
+        this.driffs[0].setDriff(new Driff(DriffData.fromName('band'), this.driffs[0], 1, 3))
+        this.driffs[1].setDriff(new Driff(GUIItemEpik.SECOND_MOD[data.name],    this.driffs[1], 1, 3))
+    }
+
+    /**
+     * zwraca bonus do efektu driffów
+     * @returns {Number}
+     */
+    getDriffAmplifire() {
+        return super.getDriffAmplifire() + .6
+    }
+}
+class GUIItemSyng extends GUIItem {
+    static NAMES = ['', 'Duchów', 'Kłów', 'Szponów', 'Węży', 'Smoków', 'Vorlingów', 'Lodu', 'Dawnych Orków', 'Władców', 'Torisa', 'Medy', 'Venegilda']
+
+    constructor(data) {
+        super(data)
+
+        this.tier = 0
+        
+        if (!data.syng)
+            throw TypeError(`class GUIItemSyng przyjmuje tylko GUIItemData(syng=true)`)
+    
+    
+        this.form = null
+        this.inpMod = document.createElement('input')
+        this.inpMod.value = DriffData.fromName('band').fullname
+    }
+
+    getName() {
+        return super.getName() + ' ' + GUIItemSyng.NAMES[this.tier == undefined ? 0: this.tier]
+    }
+    getRank() {
+        if (this.tier <= 4)
+            return Math.min(this.tier, 3) + 2
+        if (this.tier <= 10)
+            return Math.min(this.tier, 9) + 1
+        return this.tier
+    }
+    getImgSrc() {
+        let suf = 1 + (this.tier >= 3) + (this.tier >= 6) + (this.tier >= 9)
+        if (suf == 1)
+            suf = ''
+
+        let src = super.getImgSrc()
+        src = src.substring(0, src.length - 4) + suf + src.substring(src.length - 4)
+
+        return src
+    }
+
+    /**
+     * zwraca efekt synga
+     * @returns {Effect}
+     */
+    getEffect() {
+        let name = this.inpMod.value
+        for (let driff of Object.values(DriffData.driffs))
+            if (driff.fullname == name)
+                return new Effect(driff, driff.amp * this.tier, 1)
+        return null
+    }
+
+    
+    setEditFormHTMLDriffs(div) {
+        super.setEditFormHTMLDriffs(div)
+        if (this.form != null) {
+            div.appendChild(this.form)
+            return
+        }
+        this.form = document.createElement('span')
+        div.appendChild(this.form)
+
+        let divButtons = document.createElement('div')
+        this.form.append(divButtons)
+
+        let factory = (name, func) => {
+            let b = document.createElement('button')
+
+            b.classList = 'buildEditTierSyng'
+            b.innerText = name
+
+            divButtons.appendChild(b)
+
+            b.onclick = () => {
+                this.tier = func(this.tier)
+                this.setIcon(this.getImgSrc())
+                GUIConf.edit(this)
+                Build.calculate()
+            }
+        }
+
+        factory('Podnieś poziom', t => Math.min(12, t + 1))
+        factory('Opuść poziom',   t => Math.max(0,  t - 1))
+        // TODO bonusowe statystki
+
+        let id = 'buildDriffSlotSel' + GUIDriffSlot.__formid++;
+
+        this.inpMod.setAttribute('list', id)
+        this.inpMod.style.setProperty('width', '40%')
+
+        let lst = document.createElement('datalist')
+        lst.setAttribute('id', id)
+
+        for (let driff of Object.values(DriffData.driffs)) {
+            if (!['band', 'teld', 'farid', 'abaf', 'astah', 'ulk', 'ling', 'oda', 'holm', 'verd', 'iori', 'von', 'amad', 'ann', 'eras', 'dur', 'elen', 'tall', 'tovi', 'grud', 'heb'].includes(driff.name))
+                continue
+            let opt = document.createElement('option')
+            opt.setAttribute('value', driff.fullname)
+
+            lst.appendChild(opt)
+        }
+
+        let labelMod = document.createElement('label')
+        labelMod.innerText = 'Mod'
+
+        labelMod.appendChild(lst)
+        labelMod.appendChild(this.inpMod)
+
+        this.inpMod.onchange = () => {
+            GUIConf.edit(this)
+            Build.calculate()
+        }
+
+        this.form.appendChild(labelMod)
+    }
+}
+
 class GUIItemData {
     static INCRUST_STATS_BOOSTS = [.03, .03, .04, .05, .05, .05, .1, .15]
     static items = {}
@@ -2311,13 +2569,14 @@ class GUIItemData {
      * @param {number} rank 
      * @param {String} type 
      */
-    constructor(name, fullname, rank, type, stats, epik = false) {
+    constructor(name, fullname, rank, type, stats, epik = false, syng = false) {
         this.id = GUIItemData.__id++;
         this.fullname = fullname
         this.name = name
         this.rank = rank
         this.type = type
         this.epik = epik
+        this.syng = syng
         this._stats = stats
 
 
@@ -2463,7 +2722,7 @@ function initData() {
     new DriffData('teld','Szansa na podwójny atak',.5,4,60,'Obrazen')
     new DriffData('alorn','Redukcja obrażeń',.5,4,40,'Redukcji')
     new DriffData('farid','Szansa na unik',.5,4,60,'Redukcji')
-    new DriffData('Err','Wyssanie many',.5,1,NaN,'Specjalny') // z kolorem zgaduje
+    new DriffData('Err','Wyssanie many',.5,1,NaN,'Specjalny')
 
     new DriffData('unn','Dodatkowe obrażenia od ognia',.5,3,60,'Obrazen')
     new DriffData('kalh','Dodatkowe obrażenia od zimna',.5,3,60,'Obrazen')
@@ -2492,7 +2751,6 @@ function initData() {
     new DriffData('grud','Obrona przeciw urokom',1,1,null,'Obrony')
     new DriffData('adrim','Odporność na Zamrożenie',1,1,80,'Specjalny')
     new DriffData('heb','Odporność na Unieruchomienie',.5,1,NaN,'Specjalny')
-
 
     new GUIItemData('maiarot','Maiarot',2,'Amulety',{waga:3,wartosc:36000,pz:120,res_uro:20,wym_lvl:18})
     new GUIItemData('derengil','Derengil',2,'Bron',{waga:2,wartosc:36000,konda:40,sila:8,zreka:6,obr:66,r_obr:'sieczne',wym_lvl:18,wym_sila:20})
@@ -2657,13 +2915,36 @@ function initData() {
     new GUIItemData('voglery','Voglery',12,'Rekawice',{waga:0,wartosc:0,wym_lvl:0})
 
 
-    new GUIItemData('allenor','Allenor',9,'Bron',{waga:10,wartosc:3000000,wym_klasa:'rycerz',obr:100,r_obr:'sieczne',pz:250,konda:50,sila:15,zreka:15,wym_lvl:60},true);
-    new GUIItemData('attawa','Attawa',9,'Bron',{waga:15,wartosc:3000000,wym_klasa:'voodoo',obr:120,r_obr:'obuchowe',pz:100,mana:50,moc:15,wiedza:30,wym_lvl:60},true);
-    new GUIItemData('gorthdar','Gorthdar',9,'Bron',{waga:50,wartosc:3000000,wym_klasa:'barbarzyńca',obr:130,r_obr:'sieczne',pz:150,konda:50,sila:25,zreka:15,wym_lvl:60},true);
-    new GUIItemData('imisindo','Imisindo',9,'Bron',{waga:10,wartosc:3000000,wym_klasa:'łucznik',obr:105,r_obr:'kłute',pz:200,konda:50,sila:15,zreka:20,wym_lvl:60},true);
-    new GUIItemData('latarnia_zycia','Latarnia Życia',9,'Bron',{waga:15,wartosc:3000000,wym_klasa:'druid',obr:120,r_obr:'obuchowe',pz:100,mana:50,moc:20,wiedza:25,wym_lvl:60},true);
-    new GUIItemData('washi','Washi',9,'Bron',{waga:10,wartosc:3000000,wym_klasa:'sheed',obr:115,r_obr:'kłute',pz:200,konda:50,sila:15,zreka:20,wym_lvl:60},true);
-    new GUIItemData('zmij','Żmij',9,'Bron',{waga:15,wartosc:3000000,wym_klasa:'mag ognia',obr:120,r_obr:'obuchowe',pz:150,moc:30,wiedza:15,wym_lvl:60},true);
+    new GUIItemData('allenor','Allenor',9,'Bron',{waga:10,wartosc:3000000,wym_klasa:'rycerz',obr:100,r_obr:'sieczne',pz:250,konda:50,sila:15,zreka:15,wym_lvl:60}, true);
+    new GUIItemData('attawa','Attawa',9,'Bron',{waga:15,wartosc:3000000,wym_klasa:'voodoo',obr:120,r_obr:'obuchowe',pz:100,mana:50,moc:15,wiedza:30,wym_lvl:60}, true);
+    new GUIItemData('gorthdar','Gorthdar',9,'Bron',{waga:50,wartosc:3000000,wym_klasa:'barbarzyńca',obr:130,r_obr:'sieczne',pz:150,konda:50,sila:25,zreka:15,wym_lvl:60}, true);
+    new GUIItemData('imisindo','Imisindo',9,'Bron',{waga:10,wartosc:3000000,wym_klasa:'łucznik',obr:105,r_obr:'kłute',pz:200,konda:50,sila:15,zreka:20,wym_lvl:60}, true);
+    new GUIItemData('latarnia_zycia','Latarnia Życia',9,'Bron',{waga:15,wartosc:3000000,wym_klasa:'druid',obr:120,r_obr:'obuchowe',pz:100,mana:50,moc:20,wiedza:25,wym_lvl:60}, true);
+    new GUIItemData('washi','Washi',9,'Bron',{waga:10,wartosc:3000000,wym_klasa:'sheed',obr:115,r_obr:'kłute',pz:200,konda:50,sila:15,zreka:20,wym_lvl:60}, true);
+    new GUIItemData('zmij','Żmij',9,'Bron',{waga:15,wartosc:3000000,wym_klasa:'mag ognia',obr:120,r_obr:'obuchowe',pz:150,moc:30,wiedza:15,wym_lvl:60}, true);
+
+    new GUIItemData('halval','Halval',2,'Helmy',{waga:10,wartosc:37500,wym_lvl:20,wym_sila:15,wym_zreka:15,sila:12,zreka:2,res_siek:20,res_obuch:20,res_klut:20}, false, true)
+    new GUIItemData('sildus','Sildus',2,'Helmy',{waga:10,wartosc:37500,wym_lvl:20,wym_moc:15,wym_wiedza:15,moc:12,wiedza:2,res_siek:20,res_obuch:20,res_klut:20}, false, true)
+    new GUIItemData('delanta','Delanta',2,'Peleryny',{waga:10,wartosc:37500,wym_lvl:20,wym_sila:15,wym_zreka:15,sila:8,zreka:2,pz:30,konda:30}, false, true)
+    new GUIItemData('gaurala','Gaurala',2,'Peleryny',{waga:10,wartosc:37500,wym_lvl:20,wym_moc:15,wym_wiedza:15,moc:8,wiedza:2,pz:30,mana:30}, false, true)
+    new GUIItemData('naharia','Naharia',2,'Zbroje',{waga:20,wartosc:37500,wym_lvl:20,wym_sila:15,wym_zreka:15,sila:2,zreka:2,pz:100,res_siek:20,res_obuch:20,res_klut:20}, false, true)
+    new GUIItemData('alava','Alava',2,'Zbroje',{waga:20,wartosc:37500,wym_lvl:20,wym_moc:15,wym_wiedza:15,moc:2,wiedza:2,pz:100,res_siek:20,res_obuch:20,res_klut:20}, false, true)
+    new GUIItemData('konari','Konari',2,'Paski',{waga:5,wartosc:37500,wym_lvl:20,wym_sila:15,wym_zreka:15,sila:2,zreka:6,pz:60,konda:20}, false, true)
+    new GUIItemData('szandrello','Szandrello',2,'Paski',{waga:5,wartosc:37500,wym_lvl:20,wym_moc:15,wym_wiedza:15,moc:2,wiedza:6,pz:60,mana:20}, false, true)
+    new GUIItemData('samadany','Samadany',2,'Spodnie',{waga:12,wartosc:37500,wym_lvl:20,wym_sila:15,wym_zreka:15,sila:1,zreka:10,pz:10,konda:20,res_siek:20,res_obuch:20,res_klut:20}, false, true)
+    new GUIItemData('darbany','Darbany',2,'Spodnie',{waga:12,wartosc:37500,wym_lvl:20,wym_moc:15,wym_wiedza:15,moc:1,wiedza:10,pz:10,mana:20,res_siek:20,res_obuch:20,res_klut:20}, false, true)
+    new GUIItemData('varaugi','Varaugi',2,'Buty',{waga:8,wartosc:37500,wym_lvl:20,wym_sila:15,wym_zreka:15,sila:4,zreka:7,pz:10,konda:20,res_siek:20,res_obuch:20,res_klut:20}, false, true)
+    new GUIItemData('gilladany','Gilladany',2,'Buty',{waga:8,wartosc:37500,wym_lvl:20,wym_moc:15,wym_wiedza:15,moc:4,wiedza:7,pz:10,mana:20,res_siek:20,res_obuch:20,res_klut:20}, false, true)
+    new GUIItemData('nakaran','Nakaran',2,'Tarcze Karwasze',{waga:8,wartosc:37500,wym_lvl:20,wym_sila:15,wym_zreka:15,sila:4,zreka:3,pz:50,konda:40}, false, true)
+    new GUIItemData('altabar','Altabar',2,'Tarcze Karwasze',{waga:8,wartosc:37500,wym_lvl:20,wym_moc:15,wym_wiedza:15,moc:4,wiedza:3,pz:50,mana:40}, false, true)
+    new GUIItemData('azvary','Azvary',2,'Rekawice',{waga:4,wartosc:37500,wym_lvl:20,wym_sila:15,wym_zreka:15,sila:4,zreka:4,pz:40,konda:40}, false, true)
+    new GUIItemData('talgundy','Talgundy',2,'Rekawice',{waga:4,wartosc:37500,wym_lvl:20,wym_moc:15,wym_wiedza:15,moc:4,wiedza:4,pz:40,mana:40}, false, true)
+    new GUIItemData('murrim','Murrim',2,'Pierki',{waga:2,wartosc:37500,wym_lvl:20,wym_sila:15,wym_zreka:15,sila:7,zreka:7,pz:20}, false, true)
+    new GUIItemData('dahadi','Dahadi',2,'Pierki',{waga:2,wartosc:37500,wym_lvl:20,wym_moc:15,wym_wiedza:15,moc:7,wiedza:7,pz:20}, false, true)
+    new GUIItemData('ganeris','Ganeris',2,'Amulety',{waga:2,wartosc:37500,wym_lvl:20,wym_sila:15,wym_zreka:15,sila:5,zreka:5,pz:40,konda:20}, false, true)
+    new GUIItemData('loniris','Loniris',2,'Amulety',{waga:2,wartosc:37500,wym_lvl:20,wym_moc:15,wym_wiedza:15,moc:5,wiedza:5,pz:40,mana:20}, false, true)
+    new GUIItemData('eriba','Eriba',2,'Pierki',{waga:2,wartosc:37500,wym_lvl:20,pz:40,res_ogien:12,res_zimno:12,res_ene:12,res_uro:12}, false, true)
+    new GUIItemData('miris','Miris',2,'Amulety',{waga:2,wartosc:37500,wym_lvl:20,pz:20,res_ogien:12,res_zimno:12,res_ene:12,res_uro:12}, false, true)
 }
 
 
