@@ -401,7 +401,7 @@ class Build {
             let labels = document.getElementById('eski').children[0].children
             for (let i = 0; i <= 2; i++) // eska odlm pl
                 labels[i].children[0].value = get2() / 10
-            calculate()
+            ESKI.calculate()
 
             // skills.js
             let lvl = get2()
@@ -411,7 +411,7 @@ class Build {
 
             Skills.makeSkills(prof)
             for (let i = 1; i <= 9; i++) // skille klasowe
-                Skills.setLvL(prof + i, get1()) // TODO Skills.setLvl(prof, lvl) w skills.js
+                Skills.setLvL(prof + i, get1())
             for (let i = 1; i <= 5; i++) // skille ogólne
                 Skills.setLvL('s' + i, get1())
             Skills.setLvL('wataha', get1()) // wataha

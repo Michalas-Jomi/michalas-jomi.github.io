@@ -51,13 +51,14 @@
         #eski table {
             font-size: 30;
             border: 3px solid black;
+            margin-right: 2px;
             margin-top: 20px;
         }
         
         #eski table td,
         #eski table th {
             border: 1px solid black;
-            padding: 3px;
+            padding: 2px;
         }
         
         #eski center>* {
@@ -66,6 +67,13 @@
         
         #eski .eskitd2 {
             background-color: rgba(0, 255, 0, 0.05);
+        }
+
+        #eski .good {
+            color: greenyellow;
+        }
+        #eski .bad {
+            color: red;
         }
         
         #menu {
@@ -158,7 +166,7 @@
 
         <nav>
             <div id="menu" style="top: 0px;">
-                <span value="eski">Eski</span>
+                <span value="eski">Tabelki</span>
                 <span value="procenty">beta %</span>
                 <span value="skille">Skille</span>
                 <span value="heal">Heal</span>
@@ -214,17 +222,11 @@
                     <label>Cena eski/itemu: <input type='number' value='24' min='0'>(szt [k])</label>
                     <label>Cena odłamku: <input type='number' value='19' min='0'>(szt [k])</label>
                     <label>Cena platy: <input type='number' value='8' min='0'>(szt [k])</label>
-                    <label>Ranga itemku: <input type='number' value='0' min='0' max='12'>(0-12)</label>
                 </div>
 
                 <div></div>
 
-                <div>
-                    <p>jeżeli ranga itemu jest inna niż 0, pokazana zostanie jedynie wartość cena eski z i bez inhibitora</p>
-                </div>
-
                 <script src="eski.js"></script>
-
             </div>
         </article>
 
