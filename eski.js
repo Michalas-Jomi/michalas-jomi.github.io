@@ -14,12 +14,38 @@ function romanize(num) {
 }
 
 class EskiTable {
-    constructor(title) {
-        this.title = title
+    static _tables = {}
+    static _states = {}
+    static reset() {
+        EskiTable._tables = {}
+    }
+    static _addTable(cat, table) {
+        if (!Object.keys(EskiTable._tables).includes(cat))
+            EskiTable._tables[cat] = []
+        EskiTable._tables[cat].push(table)
+    }
+
+    static switch(category) {
+        let off = EskiTable._tables[category][0].table.style.getPropertyValue('display') == 'none'
+        EskiTable.display(category, off)
+    }
+    static display(category, show=false) {
+        EskiTable._states[category] = show
+        for (let table of EskiTable._tables[category])
+            table.table.style.setProperty('display', show ? 'block' : 'none')
+    }
+
+    constructor(category, title) {
+        this.category = category
         this.headers = [[]]
+        this.title = title
+        this.table = null
         this.rows = []
         this.cols = 0
+
+        EskiTable._addTable(category, this)
     }
+
 
     newHeadersRow() {
         this.headers.push([])
@@ -55,12 +81,11 @@ class EskiTable {
                 return i - start
         return header.length - start
     }
-    build() {
-        this.removeBadCols()
+    build(compress=true) {
+        if (compress)
+            this.removeBadCols()
 
-        let html = '<table>'
-
-        html += '<thead>'
+        let html = '<thead>'
         html += `<tr><th colspan=${this.cols}>${this.title}</th></tr>`
         for (let row of this.headers) {
             html += '<tr>'
@@ -84,9 +109,11 @@ class EskiTable {
         }
         html += '</tbody>'
 
-        html += '</table>'
+        this.table = document.createElement('table')
+        this.table.style.setProperty('display', EskiTable._states[this.category] === false ? 'none' : 'block')
+        this.table.innerHTML = html
 
-        return html
+        return this.table
     }
 }
 
@@ -94,10 +121,12 @@ class Eski {
     constructor() {
         this.div = document.getElementById('eski')
         this.labels = this.div.children[0].children
-        this.canvas = this.div.children[1]
+        this.canvas = this.div.children[2]
 
         for (let label of this.labels)
             label.children[0].onchange = () => this.calculate()
+        for (let label of this.div.children[1].children)
+            label.onclick = label => EskiTable.switch(label.target.getAttribute('value'))
 
         this.calculate()
     }
@@ -106,12 +135,18 @@ class Eski {
         let eska = parseFloat(this.labels[0].children[0].value)
         let odlm = parseFloat(this.labels[1].children[0].value)
         let pl = parseFloat(this.labels[2].children[0].value)
+        let podatek = this.labels[3].children[0].checked
+        console.log(podatek)
+
+        EskiTable.reset()
 
         let html = ''
+        this.canvas.innerHTML = html
 
 
         // eski kolor gwiazdek -> 5 ^ kolor(0-3) * kat(1-4) 
         let ileE = [2, 5, 12, 24, 32, 40, 55, 70, 85, 115, 145, 175] // Eski
+        let ileD = [5, 10, 20, 40] // Driffy
         let ileOR = [
                 [3, 5, 8, 12, 20, 30, 50, 100, 250],
                 [15, 25, 40, 60, 100, 150, 250, 500, 1250],
@@ -135,13 +170,13 @@ class Eski {
 
             return notation(x / 1000) + 'k'
         }
-        let display = (x, good) => `<span class='${good === undefined ? '' : good ? 'good' : 'bad'}'>${notation(x)}</span>`
+        let display = (x, good) => `<span class='${good === undefined ? '' : good ? 'good' : 'bad'}'>${notation(podatek ? x * .98 : x)}</span>`
         
 
 
         // Przetapianie
         let przetapianie = [0, 0]
-        let tablePrzetapianie = new EskiTable('Przetapianie (Zysk)')
+        let tablePrzetapianie = new EskiTable('melting', 'Przetapianie (Zysk)')
         tablePrzetapianie.addHeader('Ranga', 0)
         tablePrzetapianie.addHeader('bez inhb', 1)
         tablePrzetapianie.addHeader('z inhb', 2)
@@ -158,11 +193,28 @@ class Eski {
                                      `<span class='c1'>${display(c1, c1 >= c2)}</span>`,
                                      `<span class='c2'>${display(c2, c2 >  c1)}</span>`)
         }
-        html += tablePrzetapianie.build()
+        this.canvas.appendChild(tablePrzetapianie.build())
+
+        let tablePrzetapianieDriffy = new EskiTable('melting', 'Przetapianie driffy')
+        tablePrzetapianieDriffy.addHeader('Ranga', 0)
+        tablePrzetapianieDriffy.addHeader('bez inhb', 1)
+        tablePrzetapianieDriffy.addHeader('z inhb', 2)
+        for (let i = 0; i <= 9; i += 3) {
+            let ct = ileD[i / 3]
+            let ih = inh[i]
+
+            let c1 = ct * eska - 20
+            let c2 = Math.ceil(ct * 1.3) * eska - 20 - ih * pl
+
+            tablePrzetapianieDriffy.addRow(`<span class='lp'>${['sub', 'bid', 'magni', 'arcy'][i/3]}</span>`,
+                                     `<span class='c1'>${display(c1, c1 >= c2)}</span>`,
+                                     `<span class='c2'>${display(c2, c2 >  c1)}</span>`)
+        }
+        this.canvas.appendChild(tablePrzetapianieDriffy.build())
         
 
         // Ładowanie
-        let tableLadowanie = new EskiTable('Ładowanie (koszt 10%)')
+        let tableLadowanie = new EskiTable('charging', 'Ładowanie (koszt 10%)')
         tableLadowanie.addHeader('Ranga', 0)
         tableLadowanie.addHeader('bez inhb', 1)
         tableLadowanie.addHeader('z inhb', 2)
@@ -176,35 +228,10 @@ class Eski {
                                 display(c1, c1 <= c2),
                                 display(c2, c2 <  c1))
         }
-        html += tableLadowanie.build()
-
-
-        // Flaszki Gorzałki
-        html += `<table style='margin-left: 10px;'>
-        <thead>
-            <tr>
-                <th colspan=2>Gorzałki</th>
-            </tr>
-            <tr>
-                <th>Rejon</th>
-                <th>cena 1szt</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Garni</td>
-                <td>${display(Math.round((eska + 55) / 3 * 10) / 10)}</td>
-            </tr>
-            <tr>
-                <td>Łowca</td>
-                <td>${display(Math.round((eska + 50) / 3 * 10) / 10)}</td>
-            </tr>
-        </tbody>
-        </table>`
-
+        this.canvas.appendChild(tableLadowanie.build())
 
         // Rozbijanie Rary
-        let tableRRary = new EskiTable('Rozbijanie Rary')
+        let tableRRary = new EskiTable('crushR', 'Rozbijanie Rary')
         tableRRary.addHeader('II - III', 1, 2)
         tableRRary.addHeader('IV - VI', 3, 4)
         tableRRary.addHeader('VII - IX', 5, 6)
@@ -224,11 +251,11 @@ class Eski {
             }
             tableRRary.addRow(`<img src="icons/gw${parseInt(gw / 3) + 1}.png">`.repeat(gw % 3 + 1), ...items)
         }
-        html += tableRRary.build()
+        this.canvas.appendChild(tableRRary.build())
         
 
         // Rozbijanie Sety
-        let tableRSety = new EskiTable('Rozbijanie Sety')
+        let tableRSety = new EskiTable('crushS', 'Rozbijanie Sety')
         tableRSety.addHeader('II - III', 1, 2)
         tableRSety.addHeader('IV - V', 3, 4)
         tableRSety.addHeader('IX', 5, 6)
@@ -247,14 +274,30 @@ class Eski {
             }
             tableRSety.addRow(`<img src="icons/gw${parseInt(gw / 3) + 1}.png">`.repeat(gw % 3 + 1), ...items)
         }
-        html += tableRSety.build()
+        this.canvas.appendChild(tableRSety.build())
 
+        // Flaszki Gorzałki
+        let tableGorzo = new EskiTable('other', 'Gorzałki')
+        tableGorzo.addHeader("Rejon", 0)
+        tableGorzo.addHeader("cena 1szt", 1)
+        tableGorzo.addRow('Garni', display(Math.round((eska + 55) / 3 * 10) / 10, false))
+        tableGorzo.addRow('Łowca', display(Math.round((eska + 50) / 3 * 10) / 10, true))
+        this.canvas.appendChild(tableGorzo.build())
 
-        // center
-        html = `<center>${html}</center><div style='clear: both;'></div>`
+        // Zwoje
+        let tableZwoje = new EskiTable('other', 'Zwoje')
+        tableZwoje.addHeader('Rodzaj', 0)
+        tableZwoje.addHeader('wartość', 1)
+        tableZwoje.addRow('tp gildia', display(pl / 5, true))
+        tableZwoje.addRow('tp premium', display(3*pl / 10, false))
+        tableZwoje.addRow('tp trentis', display(pl, true))
+        this.canvas.appendChild(tableZwoje.build())
 
+        // Imperiały
+        let tableImperialy = new EskiTable('other', 'Imperiały')
+        tableImperialy.addRow('szt', display(pl / 5, true))
+        this.canvas.appendChild(tableImperialy.build())
 
-        this.canvas.innerHTML = html
     }
 }
 

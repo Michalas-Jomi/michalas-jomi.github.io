@@ -53,6 +53,7 @@
             border: 3px solid black;
             margin-right: 2px;
             margin-top: 20px;
+            float: left;
         }
         
         #eski table td,
@@ -74,6 +75,21 @@
         }
         #eski .bad {
             color: red;
+        }
+        #eski nav label {
+            float: left;
+            background-color: #6664;
+            padding: 5px 10px;
+            margin: 3px;
+            text-align: center;
+            border-radius: 90px;
+        }
+        #eski nav label:hover {
+            background-color: #666a;
+            cursor: pointer;
+        }
+        #eski nav {
+            margin: 5px auto;
         }
         
         #menu {
@@ -222,7 +238,18 @@
                     <label>Cena eski/itemu: <input type='number' value='24' min='0'>(szt [k])</label>
                     <label>Cena odłamku: <input type='number' value='19' min='0'>(szt [k])</label>
                     <label>Cena platy: <input type='number' value='8' min='0'>(szt [k])</label>
+                    <label>uwzględnij podatek (2%): <input type='checkbox'></label>
                 </div>
+
+                <nav>
+                    <div>
+                        <label value="melting">Przetapianie</label>
+                        <label value="charging">Ładowanie</label>
+                        <label value="crushR">Rozbijanie Rary</label>
+                        <label value="crushS">Rozbijanie Sety</label>
+                        <label value="other">Inne</label>
+                    </div>
+                </nav>
 
                 <div></div>
 
