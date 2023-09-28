@@ -47,7 +47,7 @@ class Procenty {
         for (let a of A) {
             html += `<tr><td>${row++}pa</td>`
             for (let o of O)
-                html += `<td>${Math.floor(a / (a+o) * 100)}%</td>`
+                html += `<td>${Math.floor(a / (a+o) * 1000) / 10}%</td>`
             html += '</tr>'
         }
         

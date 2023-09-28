@@ -136,7 +136,6 @@ class Eski {
         let odlm = parseFloat(this.labels[1].children[0].value)
         let pl = parseFloat(this.labels[2].children[0].value)
         let podatek = this.labels[3].children[0].checked
-        console.log(podatek)
 
         EskiTable.reset()
 
@@ -170,7 +169,17 @@ class Eski {
 
             return notation(x / 1000) + 'k'
         }
-        let display = (x, good) => `<span class='${good === undefined ? '' : good ? 'good' : 'bad'}'>${notation(podatek ? x * .98 : x)}</span>`
+        let display = (x, good) => {
+            let color = (() => {
+                switch (good) {
+                    case null:  return 'good bad'
+                    case true:  return 'good'
+                    case false: return 'bad'
+                    default:    return ''
+                }
+            })()
+            return `<span class='${color}'>${notation(podatek ? x * .98 : x)}</span>`
+        }
         
 
 
@@ -194,25 +203,7 @@ class Eski {
                                      `<span class='c2'>${display(c2, c2 >  c1)}</span>`)
         }
         this.canvas.appendChild(tablePrzetapianie.build())
-
-        let tablePrzetapianieDriffy = new EskiTable('melting', 'Przetapianie driffy')
-        tablePrzetapianieDriffy.addHeader('Ranga', 0)
-        tablePrzetapianieDriffy.addHeader('bez inhb', 1)
-        tablePrzetapianieDriffy.addHeader('z inhb', 2)
-        for (let i = 0; i <= 9; i += 3) {
-            let ct = ileD[i / 3]
-            let ih = inh[i]
-
-            let c1 = ct * eska - 20
-            let c2 = Math.ceil(ct * 1.3) * eska - 20 - ih * pl
-
-            tablePrzetapianieDriffy.addRow(`<span class='lp'>${['sub', 'bid', 'magni', 'arcy'][i/3]}</span>`,
-                                     `<span class='c1'>${display(c1, c1 >= c2)}</span>`,
-                                     `<span class='c2'>${display(c2, c2 >  c1)}</span>`)
-        }
-        this.canvas.appendChild(tablePrzetapianieDriffy.build())
         
-
         // Ładowanie
         let tableLadowanie = new EskiTable('charging', 'Ładowanie (koszt 10%)')
         tableLadowanie.addHeader('Ranga', 0)
@@ -246,8 +237,10 @@ class Eski {
                 let base = -Math.pow(5, parseInt(gw / 3)) * (i + 1) - 20
                 let c1 = x * odlm + base
                 let c2 = Math.ceil(x * 1.3) * odlm + base - pl*inh[[2, 5, 8, 11][i]]
-                items.push(display(c1, c1 >= c2 && c1 >= przetapianie[[2, 4, 7, 10][i]]))
-                items.push(display(c2, c2 >  c1 && c2 >= przetapianie[[2, 4, 7, 10][i]]))
+                let p1 = przetapianie[[2, 4, 7, 10][i]]
+                let p2 = przetapianie[[3, 6, 9, 12][i]]
+                items.push(display(c1, (c1 >= c2 && p2 < c1) ? true : (c1 <  c2 || p1 > c2) ? false : null))
+                items.push(display(c2, (c2 >  c1 && p2 < c2) ? true : (c1 >= c2 || p1 > c2) ? false : null))
             }
             tableRRary.addRow(`<img src="icons/gw${parseInt(gw / 3) + 1}.png">`.repeat(gw % 3 + 1), ...items)
         }
@@ -269,12 +262,33 @@ class Eski {
                 let base = -Math.pow(5, parseInt(gw / 3)) * (i + 1) - 20
                 let c1 = x * odlm + base
                 let c2 = Math.ceil(x * 1.3) * odlm + base - pl*inh[[2, 5, 8, 11][i]]
-                items.push(display(c1, c1 >= c2 && c1 >= przetapianie[[2, 4, 9][i]]))
-                items.push(display(c2, c2 >  c1 && c2 >= przetapianie[[2, 4, 9][i]]))
+                let p1 = przetapianie[[2, 4, 9][i]]
+                let p2 = przetapianie[[3, 5, 9][i]]
+                items.push(display(c1, (c1 >= c2 && p2 < c1) ? true : (c1 <  c2 || p1 > c2) ? false : null))
+                items.push(display(c2, (c2 >  c1 && p2 < c2) ? true : (c1 >= c2 || p1 > c2) ? false : null))
             }
             tableRSety.addRow(`<img src="icons/gw${parseInt(gw / 3) + 1}.png">`.repeat(gw % 3 + 1), ...items)
         }
         this.canvas.appendChild(tableRSety.build())
+
+
+        // Przetapianie driffy
+        let tablePrzetapianieDriffy = new EskiTable('melting', 'Przetapianie driffy')
+        tablePrzetapianieDriffy.addHeader('Ranga', 0)
+        tablePrzetapianieDriffy.addHeader('bez inhb', 1)
+        tablePrzetapianieDriffy.addHeader('z inhb', 2)
+        for (let i = 0; i <= 9; i += 3) {
+            let ct = ileD[i / 3]
+            let ih = inh[i]
+
+            let c1 = ct * eska - 20
+            let c2 = Math.ceil(ct * 1.3) * eska - 20 - ih * pl
+
+            tablePrzetapianieDriffy.addRow(`<span class='lp'>${['sub', 'bid', 'magni', 'arcy'][i/3]}</span>`,
+                                     `<span class='c1'>${display(c1, c1 >= c2)}</span>`,
+                                     `<span class='c2'>${display(c2, c2 >  c1)}</span>`)
+        }
+        this.canvas.appendChild(tablePrzetapianieDriffy.build())
 
         // Flaszki Gorzałki
         let tableGorzo = new EskiTable('other', 'Gorzałki')
