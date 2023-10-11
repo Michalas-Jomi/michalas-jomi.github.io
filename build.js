@@ -809,10 +809,12 @@ class Driff {
     }
 
     power() {
-        return this.data.pow * this.tier
+        return this.data.pow * (1 + (this.lvl >= 7) + (this.lvl >= 12) + (this.lvl >= 17))
     }
     effekt() {
         let x = this.tier + this.lvl - 1
+        x += (this.tier >= 3) + (this.tier == 4)
+        
         if (this.lvl >= 19)
             x += this.lvl - 18
 
@@ -1401,8 +1403,11 @@ class GUIConf {
                 else
                     html += '<h3>' + color('lightblue', `${effect.data.fullname} ${effect.rawEffect}%`) + '</h3>'
             }
-            if (!data.syng && !data.epik)
-                html += `<h3>Pojemność: ${GUIConf.editItem.calcPower()}/${GUIConf.editItem.maxPower}</h3>`
+            if (!data.syng && !data.epik) {
+                let pow = GUIConf.editItem.calcPower()
+                let max = GUIConf.editItem.maxPower
+                html += `<h3 ${pow > max ? 'style="color: red;"' : ''}>Pojemność: ${pow}/${max}</h3>`
+            }
             if (GUIConf.editItem.driffs != null)
                 for (let i = 0; i < GUIConf.editItem.driffs.length; i++) {
                     let driff = GUIConf.editItem.driffs[i]
